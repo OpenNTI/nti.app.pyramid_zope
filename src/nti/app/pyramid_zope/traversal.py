@@ -18,4 +18,6 @@ def normal_resource_path( res ):
 	# on the urlnorm library
 	result = traversal.resource_path( res )
 	result = result.replace( '//', '/' )
+	# Our LocalSiteManager is sneaking in here, which we don't want...
+	result = result.replace( '%2B%2Betc%2B%2Bsite/', '' )
 	return result
