@@ -17,6 +17,7 @@ def resource_path( res ):
 	# also more strict. It requires strings (not None, for example)
 	# and bottoming out an at IRoot. This helps us get things right.
 	# It is probably also a bit slower.
+	__traceback_info__ = res
 	return urllib.quote( loc_interfaces.ILocationInfo( res ).getPath() )
 
 def normal_resource_path( res ):
