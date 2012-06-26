@@ -152,6 +152,8 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 					# None of the default namespaces are. See our configure.zcml for what is.
 					next_ob = ztraversing.traverseName( ob, segment, request=request )
 				except LocationError:
+					# LocationError is a type of KeyError. The DefaultTraversable turns
+					# plain KeyError and TypeErrors into LocationError.
 					return {'context': ob,
 							'view_name': segment,
 							'subpath': vpath_tuple[ i + 1:],
