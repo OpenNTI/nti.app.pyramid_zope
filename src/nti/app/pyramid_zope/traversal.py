@@ -18,7 +18,25 @@ def resource_path( res ):
 	# and bottoming out an at IRoot. This helps us get things right.
 	# It is probably also a bit slower.
 	__traceback_info__ = res
-	return urllib.quote( loc_interfaces.ILocationInfo( res ).getPath() )
+
+	# Ask for the parents; we do this instead of getPath() and url_quote
+	# to work properly with unicode paths through the magic of pyramid
+	parents = loc_interfaces.ILocationInfo( res ).getParents()
+	if parents:
+		# Take the root off, it's implicit and has a name of None
+		parents.pop()
+
+	# Put it in the order pyramid expects, root first
+	# (root is added only to the names to avoid prepending)
+	parents.reverse()
+	parents.append( res )
+	# And let pyramid construct the URL, doing proper escaping and
+	# also caching.
+	names = [''] # Bottom out at the root
+	for p in parents:
+		names.append( p. __name__ )
+	return traversal._join_path_tuple( tuple(names) )
+
 
 def normal_resource_path( res ):
 	"""
