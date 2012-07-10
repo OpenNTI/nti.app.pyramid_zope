@@ -168,7 +168,11 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 					# NOTE: By passing the request here, we require all traversers
 					# (including the namespace traversers) to be registered as multi-adapters.
 					# None of the default namespaces are. See our configure.zcml for what is.
-					next_ob = ztraversing.traverseName( ob, segment, request=request )
+
+					# Note: We're not allowing modification of further_path. This wil raise an error.
+					# It can be important to have that information during traversal, though, so that's why we pass
+					# it. That's the primary difference between traverseName and traversePathElement
+					next_ob = ztraversing.traversePathElement( ob, segment, vpath_tuple[i+1:], request=request )
 				except LocationError:
 					# LocationError is a type of KeyError. The DefaultTraversable turns
 					# plain KeyError and TypeErrors into LocationError.
