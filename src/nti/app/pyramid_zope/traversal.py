@@ -12,54 +12,18 @@ from zope.location import interfaces as loc_interfaces
 
 import urllib
 
-def resource_path( res ):
-	# This function is somewhat more flexible than pyramids, and
-	# also more strict. It requires strings (not None, for example)
-	# and bottoming out an at IRoot. This helps us get things right.
-	# It is probably also a bit slower.
-	__traceback_info__ = res
-
-	# Ask for the parents; we do this instead of getPath() and url_quote
-	# to work properly with unicode paths through the magic of pyramid
-	parents = loc_interfaces.ILocationInfo( res ).getParents()
-	if parents:
-		# Take the root off, it's implicit and has a name of None
-		parents.pop()
-
-	# Put it in the order pyramid expects, root first
-	# (root is added only to the names to avoid prepending)
-	parents.reverse()
-	parents.append( res )
-	# And let pyramid construct the URL, doing proper escaping and
-	# also caching.
-	names = [''] # Bottom out at the root
-	for p in parents:
-		names.append( p. __name__ )
-	return traversal._join_path_tuple( tuple(names) )
-
-
-def normal_resource_path( res ):
-	"""
-	:return: The result of traversing the containers of `res`,
-	but normalized by removing double slashes. This is useful
-	when elements in the containment hierarchy do not have
-	a name; however, it can hide bugs when all elements are expected
-	to have names.
-	"""
-	# If this starts to get complicated, we can take a dependency
-	# on the urlnorm library
-	result = resource_path( res )
-	result = result.replace( '//', '/' )
-	# Our LocalSiteManager is sneaking in here, which we don't want...
-	#result = result.replace( '%2B%2Betc%2B%2Bsite/', '' )
-	return result
 
 from zope import interface
 from zope.event import notify
 from zope.traversing import api as ztraversing
 from zope.traversing.interfaces import BeforeTraverseEvent
-import pyramid.interfaces
 
+from zope.deferredimport import deprecatedFrom
+deprecatedFrom( "Prefer nti.dataserver.traversal",
+				"nti.dataserver.traversal",
+				"resource_path", "normal_resource_path" )
+
+import pyramid.interfaces
 from pyramid.interfaces import VH_ROOT_KEY
 from pyramid.compat import is_nonstr_iter, decode_path_info
 from pyramid.exceptions import URLDecodeError
