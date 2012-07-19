@@ -16,7 +16,7 @@ import urllib
 from zope import interface
 from zope.event import notify
 from zope.traversing import api as ztraversing
-from zope.traversing.interfaces import BeforeTraverseEvent
+from zope.traversing.interfaces import BeforeTraverseEvent, ITraversable
 
 from zope.deferredimport import deprecatedFrom
 deprecatedFrom( "Prefer nti.dataserver.traversal",
@@ -136,7 +136,23 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 					# Note: We're not allowing modification of further_path. This wil raise an error.
 					# It can be important to have that information during traversal, though, so that's why we pass
 					# it. That's the primary difference between traverseName and traversePathElement
-					next_ob = ztraversing.traversePathElement( ob, segment, vpath_tuple[i+1:], request=request )
+
+					# JAM: Damn stupid implementation of traversePathElement ignores
+					# the request argument to find a traversable /except/ when a namespace is found.
+					# therefore, we explicitly query for the multi adapter ourself in the non-namespace case
+					# (In the namespace case, we let traversing handle it, because it needs a named adapter
+					# after parsing)
+					traversable = None
+					if segment and segment[0] not in '+@' and not ITraversable.providedBy( ob ):
+						try:
+							traversable = request.registry.queryMultiAdapter( (ob, request), ITraversable )
+						except TypeError:
+							# Some things are registered for "*" (DefaultTraversable) which means they get called
+							# here. If they can't take two arguments, then we bail. Sucks.
+							pass
+					next_ob = ztraversing.traversePathElement( ob, segment, vpath_tuple[i+1:],
+															   traversable=traversable,
+															   request=request )
 				except LocationError:
 					# LocationError is a type of KeyError. The DefaultTraversable turns
 					# plain KeyError and TypeErrors into LocationError.
@@ -156,6 +172,7 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 		# won't actually traverse into it. Be sure not to fire multiple times for this (E.g., the root)
 		# This logic is complicated by the multi-returns above.
 		notify( BeforeTraverseEvent( ob, request ) )
+
 		return {'context': ob,
 				'view_name': empty,
 				'subpath': subpath,
