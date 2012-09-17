@@ -53,8 +53,8 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 		# not currently using and the code is lifted directly from pyramid.
 		environ = request.environ
 
-		if 'bfg.routes.matchdict' in environ:
-			matchdict = environ['bfg.routes.matchdict']
+		if request.matchdict is not None:
+			matchdict = request.matchdict
 
 			path = matchdict.get('traverse', '/') or '/'
 			if is_nonstr_iter(path):

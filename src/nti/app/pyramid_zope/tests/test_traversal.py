@@ -32,6 +32,6 @@ def test_unicode_traversal():
 			return BrokenTraversable()
 
 	req = DummyRequest(path='/a/b/c')
-	req.environ['bfg.routes.matchdict'] = {'traverse': ('a','b','c')}
+	req.matchdict = {'traverse': ('a','b','c')}
 	traversal.ZopeResourceTreeTraverser( DirectTraversable() )( req )
 	assert BrokenTraversable.raised
