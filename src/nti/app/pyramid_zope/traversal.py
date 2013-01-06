@@ -34,11 +34,20 @@ empty = traversal.empty
 @interface.implementer(pyramid.interfaces.ITraverser)
 class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 	"""
-	A :class:`ITraverser` based on pyramid's default traverser, but modified to
-	use the zope.traversing machinery instead of (only) dictionary lookups.
-	This provides is with the flexibility of the :class:`zope.traversing.interfaces.ITraversable`
-	adapter pattern, plus the support of namespace lookups (:func:`zope.traversing.namespace.nsParse`
-	and :func:`zope.traversing.namespace.namespaceLookup`)
+	A :class:`ITraverser` based on pyramid's default traverser, but
+	modified to use the zope.traversing machinery instead of (only)
+	dictionary lookups. This provides is with the flexibility of the
+	:class:`zope.traversing.interfaces.ITraversable` adapter pattern,
+	plus the support of namespace lookups
+	(:func:`zope.traversing.namespace.nsParse` and
+	:func:`zope.traversing.namespace.namespaceLookup`)
+
+	As this object traverses, it fires :class:`~.IBeforeTraverseEvent`
+	events. If you either load the configuration from
+	:mod:`zope.app.publication` or manually enable the
+	:func:`~zope.site.site.threadSiteSubscriber` to subscribe to this
+	event, then any Zope site managers found along the way will be
+	made the current site.
 	"""
 
 	def __init__(self, root):
