@@ -9,7 +9,8 @@ from zope import interface
 from zope.traversing import interfaces as trv_interfaces
 
 
-from pyramid.testing import DummyRequest
+#from pyramid.testing import DummyRequest
+from nti.tests import ByteHeadersDummyRequest as DummyRequest
 
 from nti.appserver import traversal
 import nti.tests
