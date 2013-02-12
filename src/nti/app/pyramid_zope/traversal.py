@@ -1,4 +1,13 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+Support for resource tree traversal.
+
+$Id$
+"""
+
+from __future__ import print_function, unicode_literals, absolute_import
+__docformat__ = "restructuredtext en"
 
 from pyramid import traversal
 
@@ -7,10 +16,6 @@ find_interface = traversal.find_interface
 lineage = traversal.lineage
 
 from zope.location.interfaces import LocationError
-
-from zope.location import interfaces as loc_interfaces
-
-import urllib
 
 
 from zope import interface
@@ -34,13 +39,13 @@ empty = traversal.empty
 @interface.implementer(pyramid.interfaces.ITraverser)
 class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 	"""
-	A :class:`ITraverser` based on pyramid's default traverser, but
-	modified to use the zope.traversing machinery instead of (only)
-	dictionary lookups. This provides is with the flexibility of the
-	:class:`zope.traversing.interfaces.ITraversable` adapter pattern,
-	plus the support of namespace lookups
-	(:func:`zope.traversing.namespace.nsParse` and
-	:func:`zope.traversing.namespace.namespaceLookup`)
+	A :class:`.ITraverser` based on pyramid's default traverser, but
+	modified to use the :mod:`zope.traversing` machinery instead of
+	(only) dictionary lookups. This provides is with the flexibility
+	of the :class:`~zope.traversing.interfaces.ITraversable` adapter
+	pattern, plus the support of namespace lookups
+	(:func:`~zope.traversing.namespace.nsParse` and
+	:func:`~zope.traversing.namespace.namespaceLookup`)
 
 	As this object traverses, it fires :class:`~.IBeforeTraverseEvent`
 	events. If you either load the configuration from
@@ -48,6 +53,9 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 	:func:`~zope.site.site.threadSiteSubscriber` to subscribe to this
 	event, then any Zope site managers found along the way will be
 	made the current site.
+
+	.. warning :: Enabling that subscriber is not currently supported, as it
+		messes with the site components; see :mod:`nti.appserver.tweens.zope_site_tween`.
 	"""
 
 	def __init__(self, root):
@@ -65,14 +73,14 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 		if request.matchdict is not None:
 			matchdict = request.matchdict
 
-			path = matchdict.get('traverse', '/') or '/'
+			path = matchdict.get(b'traverse', b'/') or b'/'
 			if is_nonstr_iter(path):
 				# this is a *traverse stararg (not a {traverse})
 				# routing has already decoded these elements, so we just
 				# need to join them
-				path = '/'.join(path) or '/'
+				path = b'/'.join(path) or b'/'
 
-			subpath = matchdict.get('subpath', ())
+			subpath = matchdict.get(b'subpath', ())
 			if not is_nonstr_iter(subpath):  # pragma: no cover
 				# this is not a *subpath stararg (just a {subpath})
 				# routing has already decoded this string, so we just need
@@ -84,9 +92,9 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 			subpath = ()
 			try:
 				# empty if mounted under a path in mod_wsgi, for example
-				path = decode_path_info(environ['PATH_INFO'] or '/')
+				path = decode_path_info(environ[b'PATH_INFO'] or b'/')
 			except KeyError:
-				path = '/'
+				path = b'/'
 			except UnicodeDecodeError as e:
 				raise URLDecodeError(e.encoding, e.object, e.start, e.end,
 									 e.reason)
@@ -105,7 +113,7 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 		root = self.root
 		ob = vroot = root
 
-		if vpath == '/': # invariant: vpath must not be empty
+		if vpath == b'/': # invariant: vpath must not be empty
 			# prevent a call to traversal_path if we know it's going
 			# to return the empty tuple
 			vpath_tuple = ()
@@ -152,7 +160,7 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 					# (In the namespace case, we let traversing handle it, because it needs a named adapter
 					# after parsing)
 					traversable = None
-					if segment and segment[0] not in '+@' and not ITraversable.providedBy( ob ):
+					if segment and segment[0] not in b'+@' and not ITraversable.providedBy( ob ):
 						try:
 							traversable = request.registry.queryMultiAdapter( (ob, request), ITraversable )
 						except TypeError:
