@@ -167,6 +167,7 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 							# Some things are registered for "*" (DefaultTraversable) which means they get called
 							# here. If they can't take two arguments, then we bail. Sucks.
 							pass
+
 					next_ob = ztraversing.traversePathElement( ob, segment, vpath_tuple[i+1:],
 															   traversable=traversable,
 															   request=request )
