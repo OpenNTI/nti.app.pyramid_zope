@@ -5,18 +5,15 @@ Support for resource tree traversal.
 
 $Id$
 """
-
 from __future__ import print_function, unicode_literals, absolute_import
 __docformat__ = "restructuredtext en"
 
 from pyramid import traversal
 
-#resource_path = traversal.resource_path
-find_interface = traversal.find_interface
 lineage = traversal.lineage
+find_interface = traversal.find_interface
 
 from zope.location.interfaces import LocationError
-
 
 from zope import interface
 from zope.event import notify
@@ -30,8 +27,8 @@ deprecatedFrom( "Prefer nti.dataserver.traversal",
 
 import pyramid.interfaces
 from pyramid.interfaces import VH_ROOT_KEY
-from pyramid.compat import is_nonstr_iter, decode_path_info
 from pyramid.exceptions import URLDecodeError
+from pyramid.compat import is_nonstr_iter, decode_path_info
 
 split_path_info = traversal.split_path_info
 empty = traversal.empty
