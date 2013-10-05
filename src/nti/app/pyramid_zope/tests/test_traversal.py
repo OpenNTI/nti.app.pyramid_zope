@@ -10,13 +10,13 @@ from zope.traversing import interfaces as trv_interfaces
 
 
 #from pyramid.testing import DummyRequest
-from nti.tests import ByteHeadersDummyRequest as DummyRequest
+from nti.app.testing.request_response import ByteHeadersDummyRequest as DummyRequest
 
 from nti.appserver import traversal
-import nti.tests
+import nti.testing.base
 
-setUpModule = lambda: nti.tests.module_setup( set_up_packages=(nti.appserver,) )
-tearDownModule = nti.tests.module_teardown
+setUpModule = lambda: nti.testing.base.module_setup( set_up_packages=(nti.appserver,) )
+tearDownModule = nti.testing.base.module_teardown
 
 def test_unicode_traversal():
 
