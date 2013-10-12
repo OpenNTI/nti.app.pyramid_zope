@@ -1,0 +1,15 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+			xmlns:i18n="http://namespaces.zope.org/i18n"
+			xmlns:zcml="http://namespaces.zope.org/zcml">
+
+	<include package="zope.component" file="meta.zcml" />
+	<include package="zope.component" />
+	<include package="zope.security" file="meta.zcml" />
+	<include package="zope.security" />
+
+	<adapter factory=".i18n.PyramidBrowserPreferredLanguages" />
+	<adapter factory=".i18n.PyramidBrowserPreferredCharsets" />
+
+	<adapter factory=".request.PyramidZopeRequestProxy" />
+</configure>
