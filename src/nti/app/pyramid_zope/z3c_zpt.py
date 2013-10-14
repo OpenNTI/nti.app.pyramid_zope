@@ -82,8 +82,13 @@ class ZPTTemplateRenderer(object):
 			system['view'] = request
 
 		if 'master' not in system:
-			# XXX: FIXME: There must be a better way to
-			# handle this. How did zope do it? (Acquisition?)
+			# XXX: FIXME: There must be a better way to handle this.
+			# How did zope do it? (Acquisition?)
+			# (Answer: Yes, basically. Every template was auto-loaded
+			# and at a traversable location, usually also in the
+			# acquisition path; pages traversed to the macros of the
+			# template they wanted. We can do something similar though
+			# traversal, we just need to update our templates.)
 			# FIXME: Note use of nti.appserver package
 			master = get_renderer('nti.appserver:templates/master_email.pt').implementation()
 			system['master'] = master
