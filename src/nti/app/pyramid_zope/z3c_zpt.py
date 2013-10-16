@@ -76,12 +76,14 @@ class ZPTTemplateRenderer(object):
 			request = IBrowserRequest( system['request'] )
 			system['request'] = request
 
-		view = system['view']
+		view = system['view'] # TODO: We can do better with this
 		if view is None and request is not None:
 			view = request
 			system['view'] = request
 
-		if 'master' not in system:
+		# We used to register macros, but now you should use
+		# z3c.macro and the macro: expression type
+		#if 'master' not in system:
 			# XXX: FIXME: There must be a better way to handle this.
 			# How did zope do it? (Acquisition?)
 			# (Answer: Yes, basically. Every template was auto-loaded
@@ -90,8 +92,8 @@ class ZPTTemplateRenderer(object):
 			# template they wanted. We can do something similar though
 			# traversal, we just need to update our templates.)
 			# FIXME: Note use of nti.appserver package
-			master = get_renderer('nti.appserver:templates/master_email.pt').implementation()
-			system['master'] = master
+		#	master = get_renderer('nti.appserver:templates/master_email.pt').implementation()
+		#	system['master'] = master
 		result = self.template.bind( view )( **system )
 		#print(result)
 		return result
