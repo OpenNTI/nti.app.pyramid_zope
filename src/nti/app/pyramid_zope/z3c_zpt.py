@@ -97,3 +97,49 @@ class ZPTTemplateRenderer(object):
 		result = self.template.bind( view )( **system )
 		#print(result)
 		return result
+
+
+from nti.dataserver.utils import _configure
+import simplejson
+import argparse
+import sys
+from zope.i18n import translate as ztranslate
+import os.path
+
+def main():
+	arg_parser = argparse.ArgumentParser( description="Render a single file with JSON data" )
+	arg_parser.add_argument( 'input', help="The input template" )
+	arg_parser.add_argument( 'output', help="The output filename, or - for standard out." )
+	arg_parser.add_argument( '--json',
+							 dest='data',
+							 help="The path to a filename to read as JSON data to be used as template options" )
+	args = arg_parser.parse_args()
+
+	# Must configure traversing. This configures way more than is needed,
+	# so startup is slow, but it's expedient
+	_configure( set_up_packages=('nti.appserver', 'nti.app.pyramid_zope') )
+	class Lookup(object):
+		auto_reload = False
+		debug = True
+		translate = ztranslate
+
+	class View(object):
+		context = None
+		request = None
+
+	renderer = ZPTTemplateRenderer( os.path.abspath(args.input), Lookup() )
+	system = {}
+	system['view'] = View()
+	system['request'] = None
+	value = {}
+	if args.data:
+		value = simplejson.load( open( args.data, 'rb') )
+	result = renderer( value, system )
+
+	with open(args.output, 'wb') as f:
+		f.write( result )
+
+	sys.exit( 0 )
+
+if __name__ == '__main__':
+	main()
