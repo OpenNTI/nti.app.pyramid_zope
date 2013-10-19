@@ -15,6 +15,7 @@ from zope import interface
 
 from zope.publisher.interfaces.browser import IBrowserRequest
 
+from z3c.pt.pagetemplate import BaseTemplate
 from z3c.pt.pagetemplate import ViewPageTemplateFile
 from chameleon.zpt.template import PageTemplateFile
 
@@ -37,8 +38,12 @@ class _ViewPageTemplateFileWithLoad(ViewPageTemplateFile):
 	"""
 	Enables the load: expression type for convenience.
 	"""
-	expression_types = ViewPageTemplateFile.expression_types.copy()
-	expression_types['load'] = PageTemplateFile.expression_types['load']
+	# NOTE: We cannot do the rational thing and copy this
+	# and modify our local value. This is because
+	# certain packages, notably z3c.macro,
+	# modify the superclass's value; depending on the order
+	# of import, we may or may not get that change.
+	# So we do the bad thing too and modify the superclass also
 
 	@property
 	def builtins(self):
@@ -51,6 +56,7 @@ class _ViewPageTemplateFileWithLoad(ViewPageTemplateFile):
 			result[k] = d[k]
 		return result
 
+BaseTemplate.expression_types['load'] = PageTemplateFile.expression_types['load']
 
 @interface.implementer(ITemplateRenderer)
 class ZPTTemplateRenderer(object):
