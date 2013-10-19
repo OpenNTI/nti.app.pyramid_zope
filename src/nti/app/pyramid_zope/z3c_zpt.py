@@ -23,6 +23,8 @@ from pyramid.decorator import reify
 from pyramid.renderers import get_renderer
 from pyramid.interfaces import ITemplateRenderer
 
+from collections import OrderedDict
+
 def renderer_factory(info):
 	"""
 	Factory to produce renderers. Intended to be used with asset specs.
@@ -42,7 +44,12 @@ class _ViewPageTemplateFileWithLoad(ViewPageTemplateFile):
 	def builtins(self):
 		d = super(_ViewPageTemplateFileWithLoad,self).builtins
 		d['__loader'] = self._loader
-		return d
+		# https://github.com/malthe/chameleon/issues/154
+		# We try to get iteration order fixed here:
+		result = OrderedDict()
+		for k in sorted(d.keys()):
+			result[k] = d[k]
+		return result
 
 
 @interface.implementer(ITemplateRenderer)
@@ -121,6 +128,8 @@ import argparse
 import sys
 from zope.i18n import translate as ztranslate
 import os.path
+import sys
+import z3c.pt.pagetemplate
 
 def main():
 	arg_parser = argparse.ArgumentParser( description="Render a single file with JSON data" )
@@ -135,7 +144,9 @@ def main():
 	# other stuff might be convenient but slows down startup,
 	# so add as use-cases arise
 	#_configure( set_up_packages=('nti.appserver', 'nti.app.pyramid_zope') )
-	_configure( set_up_packages=('zope.traversing',) )
+	_configure( set_up_packages=( 'z3c.ptcompat', ) )
+	# Turn zope.security back off, pointless in this context
+	z3c.pt.pagetemplate.sys_modules = sys.modules
 	class Lookup(object):
 		auto_reload = False
 		debug = True
