@@ -16,6 +16,7 @@ from zope import interface
 from zope.publisher.interfaces.browser import IBrowserRequest
 
 from z3c.pt.pagetemplate import ViewPageTemplateFile
+from chameleon.zpt.template import PageTemplateFile
 
 from pyramid_chameleon.renderer import template_renderer_factory
 from pyramid.decorator import reify
@@ -30,11 +31,26 @@ def renderer_factory(info):
 	"""
 	return template_renderer_factory(info, ZPTTemplateRenderer)
 
+class _ViewPageTemplateFileWithLoad(ViewPageTemplateFile):
+	"""
+	Enables the load: expression type for convenience.
+	"""
+	expression_types = ViewPageTemplateFile.expression_types.copy()
+	expression_types['load'] = PageTemplateFile.expression_types['load']
+
+	@property
+	def builtins(self):
+		d = super(_ViewPageTemplateFileWithLoad,self).builtins
+		d['__loader'] = self._loader
+		return d
+
+
 @interface.implementer(ITemplateRenderer)
 class ZPTTemplateRenderer(object):
 	"""
 	Renders using a :class:`z3c.pt.pagetemplate.ViewPageTemplateFile`
 	"""
+
 	def __init__(self, path, lookup, macro=None):
 		"""
 		:keyword macro: New in pyramid 1.4, currently unsupported.
@@ -48,10 +64,10 @@ class ZPTTemplateRenderer(object):
 
 	@reify # avoid looking up reload_templates before manager pushed
 	def template(self):
-		return ViewPageTemplateFile(self.path,
-									auto_reload=self.lookup.auto_reload,
-									debug=self.lookup.debug,
-									translate=self.lookup.translate)
+		return _ViewPageTemplateFileWithLoad(self.path,
+											 auto_reload=self.lookup.auto_reload,
+											 debug=self.lookup.debug,
+											 translate=self.lookup.translate)
 
 	def implementation(self): # pragma: no cover
 		return self.template
@@ -115,9 +131,11 @@ def main():
 							 help="The path to a filename to read as JSON data to be used as template options" )
 	args = arg_parser.parse_args()
 
-	# Must configure traversing. This configures way more than is needed,
-	# so startup is slow, but it's expedient
-	_configure( set_up_packages=('nti.appserver', 'nti.app.pyramid_zope') )
+	# Must configure traversing;
+	# other stuff might be convenient but slows down startup,
+	# so add as use-cases arise
+	#_configure( set_up_packages=('nti.appserver', 'nti.app.pyramid_zope') )
+	_configure( set_up_packages=('zope.traversing',) )
 	class Lookup(object):
 		auto_reload = False
 		debug = True
