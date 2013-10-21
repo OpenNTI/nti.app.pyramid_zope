@@ -136,6 +136,7 @@ from zope.i18n import translate as ztranslate
 import os.path
 import sys
 import z3c.pt.pagetemplate
+import codecs
 
 def main():
 	arg_parser = argparse.ArgumentParser( description="Render a single file with JSON data" )
@@ -144,6 +145,10 @@ def main():
 	arg_parser.add_argument( '--json',
 							 dest='data',
 							 help="The path to a filename to read as JSON data to be used as template options" )
+	arg_parser.add_argument( '--encoding',
+							 dest='encoding',
+							 help="The encoding of the output file." )
+
 	args = arg_parser.parse_args()
 
 	# Must configure traversing;
@@ -171,7 +176,16 @@ def main():
 		value = simplejson.load( open( args.data, 'rb') )
 	result = renderer( value, system )
 
-	with open(args.output, 'wb') as f:
+	encoding = args.encoding or 'utf-8'
+
+	# The result of PT rendering is a unicode string.
+	# If it contained actual non-ascii characters,
+	# we need to pick an encoding on the way out.
+	# Because we are in HTML/XML the safest thing to
+	# do for an encoding that doesn't handle a given value
+	# is to use an entity escape (however our default of utf8
+	# should handle everything)
+	with codecs.open(args.output, 'wb', encoding=encoding, errors='xmlcharrefreplace') as f:
 		f.write( result )
 
 	sys.exit( 0 )
