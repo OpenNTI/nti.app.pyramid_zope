@@ -115,13 +115,11 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 			# to return the empty tuple
 			vpath_tuple = ()
 		else:
-			# we do dead reckoning here via tuple slicing instead of
-			# pushing and popping temporary lists for speed purposes
-			# and this hurts readability; apologies
 			i = 0
 			view_selector = self.VIEW_SELECTOR
-			vpath_tuple = split_path_info(vpath)
+			vpath_tuple = list( split_path_info(vpath) ) # A list so that remaining_path can be modified
 			for segment in vpath_tuple:
+
 				# JAM: Fire traversal events, mainly so sites get installed. See
 				# zope.publisher.base.
 				notify( BeforeTraverseEvent( ob, request ) )
@@ -147,10 +145,6 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 					# (including the namespace traversers) to be registered as multi-adapters.
 					# None of the default namespaces are. See our configure.zcml for what is.
 
-					# Note: We're not allowing modification of further_path. This wil raise an error.
-					# It can be important to have that information during traversal, though, so that's why we pass
-					# it. That's the primary difference between traverseName and traversePathElement
-
 					# JAM: Damn stupid implementation of traversePathElement ignores
 					# the request argument to find a traversable /except/ when a namespace is found.
 					# therefore, we explicitly query for the multi adapter ourself in the non-namespace case
@@ -165,9 +159,14 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 							# here. If they can't take two arguments, then we bail. Sucks.
 							pass
 
-					next_ob = ztraversing.traversePathElement( ob, segment, vpath_tuple[i+1:],
+					remaining_path = vpath_tuple[i+1:]
+					next_ob = ztraversing.traversePathElement( ob, segment, remaining_path,
 															   traversable=traversable,
 															   request=request )
+					if remaining_path != vpath_tuple[i+1:]:
+						# Is this if check necessary? It would be faster to
+						# always assign
+						vpath_tuple[i+1:] = remaining_path
 				except LocationError:
 					# LocationError is a type of KeyError. The DefaultTraversable turns
 					# plain KeyError and TypeErrors into LocationError.
