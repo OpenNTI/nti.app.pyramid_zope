@@ -119,7 +119,6 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 			view_selector = self.VIEW_SELECTOR
 			vpath_tuple = list( split_path_info(vpath) ) # A list so that remaining_path can be modified
 			for segment in vpath_tuple:
-
 				# JAM: Fire traversal events, mainly so sites get installed. See
 				# zope.publisher.base.
 				notify( BeforeTraverseEvent( ob, request ) )
