@@ -11,5 +11,6 @@
 	<adapter factory=".i18n.PyramidBrowserPreferredLanguages" />
 	<adapter factory=".i18n.PyramidBrowserPreferredCharsets" />
 
-	<adapter factory=".request.PyramidZopeRequestProxy" />
+	<adapter factory=".request.PyramidZopeRequestProxy"
+			 provides="zope.publisher.interfaces.browser.IBrowserRequest" />
 </configure>
