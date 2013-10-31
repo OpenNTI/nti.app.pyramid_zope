@@ -130,6 +130,8 @@ class ZPTTemplateRenderer(object):
 
 from nti.dataserver.utils import _configure
 import simplejson
+import yaml
+import csv
 import argparse
 import sys
 from zope.i18n import translate as ztranslate
@@ -142,9 +144,14 @@ def main():
 	arg_parser = argparse.ArgumentParser( description="Render a single file with JSON data" )
 	arg_parser.add_argument( 'input', help="The input template" )
 	arg_parser.add_argument( 'output', help="The output filename, or - for standard out." )
-	arg_parser.add_argument( '--json',
+	arg_parser.add_argument( '--data',
 							 dest='data',
-							 help="The path to a filename to read as JSON data to be used as template options" )
+							 help="The path to a filename to read to get the data for template options.\n"
+							 "JSON, YAML or CSV can be used. If JSON or YAML, the options will be whatever was"
+							 " specified in the file, typically a dictionary or array."
+							 "If CSV, the first row should be a header row naming the fields, and the options"
+							 " will be a list of dictionaries with those keys" )
+	arg_parser.add_argument( '--json', dest='data' )
 	arg_parser.add_argument( '--encoding',
 							 dest='encoding',
 							 help="The encoding of the output file." )
@@ -173,7 +180,13 @@ def main():
 	system['request'] = None
 	value = {}
 	if args.data:
-		value = simplejson.load( open( args.data, 'rb') )
+		with open(args.data, 'rb') as data:
+			if args.data.endswith( '.yaml' ):
+				value = yaml.load( data )
+			elif args.data.endswith( '.csv' ):
+				value = list( csv.DictReader( data ) )
+			else:
+				value = simplejson.load( data )
 	result = renderer( value, system )
 
 	encoding = args.encoding or 'utf-8'
