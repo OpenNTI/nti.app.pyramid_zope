@@ -165,6 +165,10 @@ def main():
 							 default=False,
 							 help="If given, wrap each item from --repeat-on as a one-element list. This makes "
 							 "it easy to convert templates to create multiple files and share the basic iteration code.")
+	arg_parser.add_argument( '--repeat-filename-specific-path',
+							 dest='repeat_filename',
+							 help="If given, a TAL path evaluated for each item being repeated. If found and true, "
+							 "used as a part of the filename, subject to mangling.")
 	arg_parser.add_argument( '--json', dest='data' )
 	arg_parser.add_argument( '--encoding',
 							 dest='encoding',
@@ -217,13 +221,29 @@ def main():
 	if args.repeat_on:
 		output_base, output_ext = os.path.splitext( args.output )
 		for i, val in enumerate(tapi.traverse( value, args.repeat_on )):
+			raw_val = val
 			if args.repeat_iter:
 				val = [val]
 			# TODO: Need to make this more like tal's RepeatDict, giving
 			# access to all its special values
 			repeat_dict = { args.repeat_on_name: val }
 			result = renderer( repeat_dict, system )
-			output = output_base + os.path.extsep + str(i) + output_ext
+
+			output_specific = None
+			if args.repeat_filename:
+				try:
+					output_specific = tapi.traverse(raw_val, args.repeat_filename)
+					output_specific = output_specific.strip()
+					output_specific = output_specific.lower().replace(' ', '_')
+					output_specific = output_specific.replace(os.path.sep, '_')
+					if not output_specific:
+						raise ValueError()
+				except (KeyError,TypeError,ValueError):
+					output_specific = None
+			if output_specific is None:
+				output_specific = str(i)
+
+			output = output_base + os.path.extsep + output_specific + output_ext
 			_write( result, output )
 	else:
 		result = renderer( value, system )
