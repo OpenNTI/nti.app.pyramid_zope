@@ -140,6 +140,7 @@ import sys
 import z3c.pt.pagetemplate
 import codecs
 from zope.traversing import api as tapi
+from chameleon.tal import RepeatDict, RepeatItem
 
 def main():
 	arg_parser = argparse.ArgumentParser( description="Render a single file with JSON data" )
@@ -220,12 +221,16 @@ def main():
 
 	if args.repeat_on:
 		output_base, output_ext = os.path.splitext( args.output )
-		for i, val in enumerate(tapi.traverse( value, args.repeat_on )):
+		value['repeat'] = RepeatDict({})
+		repeat_on = tapi.traverse( value, args.repeat_on )
+		repeat_iter, _ = value['repeat'](args.repeat_on_name, repeat_on)
+		repeat_item = value['repeat'][args.repeat_on_name]
+		for val in repeat_iter:
+			i = repeat_item.index
 			raw_val = val
 			if args.repeat_iter:
 				val = [val]
-			# TODO: Need to make this more like tal's RepeatDict, giving
-			# access to all its special values
+
 			repeat_dict = value.copy()
 			repeat_dict.update( { args.repeat_on_name: val } )
 			result = renderer( repeat_dict, system )
