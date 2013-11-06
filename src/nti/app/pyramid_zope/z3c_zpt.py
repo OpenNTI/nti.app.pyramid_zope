@@ -226,7 +226,8 @@ def main():
 				val = [val]
 			# TODO: Need to make this more like tal's RepeatDict, giving
 			# access to all its special values
-			repeat_dict = { args.repeat_on_name: val }
+			repeat_dict = value.copy()
+			repeat_dict.update( { args.repeat_on_name: val } )
 			result = renderer( repeat_dict, system )
 
 			output_specific = None
