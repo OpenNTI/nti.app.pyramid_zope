@@ -221,6 +221,12 @@ def main():
 
 	if args.repeat_on:
 		output_base, output_ext = os.path.splitext( args.output )
+		# Establish a repeat item for the pages. This will be visible
+		# as options/repeat, leaving the builtin repeat as specified.
+		# If our template class overrode _pt_get_context, we could
+		# promote this to the top-level (builtin) scope (chameleon will
+		# accept that, z3c.pt is the one that prevents it by wrapping
+		# ALL keyword args in the options dict)
 		value['repeat'] = RepeatDict({})
 		repeat_on = tapi.traverse( value, args.repeat_on )
 		repeat_iter, _ = value['repeat'](args.repeat_on_name, repeat_on)
