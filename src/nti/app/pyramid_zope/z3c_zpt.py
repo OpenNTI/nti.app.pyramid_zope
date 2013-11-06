@@ -139,6 +139,7 @@ import os.path
 import sys
 import z3c.pt.pagetemplate
 import codecs
+from zope.traversing import api as tapi
 
 def main():
 	arg_parser = argparse.ArgumentParser( description="Render a single file with JSON data" )
@@ -151,6 +152,19 @@ def main():
 							 " specified in the file, typically a dictionary or array."
 							 "If CSV, the first row should be a header row naming the fields, and the options"
 							 " will be a list of dictionaries with those keys" )
+	arg_parser.add_argument( '--repeat-on',
+							 dest='repeat_on',
+							 help="If given, a traversal path that specifies something that can be "
+							 "iterated; the template will be applied repeatedly to the elements.")
+	arg_parser.add_argument( '--repeat-on-name',
+							 dest='repeat_on_name',
+							 help="The name of the element being iterated.")
+	arg_parser.add_argument( '--repeat-as-iterable',
+							 dest='repeat_iter',
+							 action='store_true',
+							 default=False,
+							 help="If given, wrap each item from --repeat-on as a one-element list. This makes "
+							 "it easy to convert templates to create multiple files and share the basic iteration code.")
 	arg_parser.add_argument( '--json', dest='data' )
 	arg_parser.add_argument( '--encoding',
 							 dest='encoding',
@@ -187,19 +201,34 @@ def main():
 				value = list( csv.DictReader( data ) )
 			else:
 				value = simplejson.load( data )
-	result = renderer( value, system )
 
 	encoding = args.encoding or 'utf-8'
+	def _write(result, output):
+		# The result of PT rendering is a unicode string.
+		# If it contained actual non-ascii characters,
+		# we need to pick an encoding on the way out.
+		# Because we are in HTML/XML the safest thing to
+		# do for an encoding that doesn't handle a given value
+		# is to use an entity escape (however our default of utf8
+		# should handle everything)
+		with codecs.open(output, 'wb', encoding=encoding, errors='xmlcharrefreplace') as f:
+			f.write( result )
 
-	# The result of PT rendering is a unicode string.
-	# If it contained actual non-ascii characters,
-	# we need to pick an encoding on the way out.
-	# Because we are in HTML/XML the safest thing to
-	# do for an encoding that doesn't handle a given value
-	# is to use an entity escape (however our default of utf8
-	# should handle everything)
-	with codecs.open(args.output, 'wb', encoding=encoding, errors='xmlcharrefreplace') as f:
-		f.write( result )
+	if args.repeat_on:
+		output_base, output_ext = os.path.splitext( args.output )
+		for i, val in enumerate(tapi.traverse( value, args.repeat_on )):
+			if args.repeat_iter:
+				val = [val]
+			# TODO: Need to make this more like tal's RepeatDict, giving
+			# access to all its special values
+			repeat_dict = { args.repeat_on_name: val }
+			result = renderer( repeat_dict, system )
+			output = output_base + os.path.extsep + str(i) + output_ext
+			_write( result, output )
+	else:
+		result = renderer( value, system )
+		_write( result, args.output )
+
 
 	sys.exit( 0 )
 
