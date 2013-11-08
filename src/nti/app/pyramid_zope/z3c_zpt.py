@@ -199,7 +199,7 @@ def main():
 	system['request'] = None
 	value = {}
 	if args.data:
-		with open(args.data, 'rbU') as data:
+		with open(args.data, 'rb') as data:
 			if args.data.endswith( '.yaml' ):
 				value = yaml.load( data )
 			elif args.data.endswith( '.csv' ):
