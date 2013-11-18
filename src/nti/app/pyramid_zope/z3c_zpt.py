@@ -199,13 +199,15 @@ def main():
 	system['request'] = None
 	value = {}
 	if args.data:
-		with open(args.data, 'rb') as data:
-			if args.data.endswith( '.yaml' ):
-				value = yaml.load( data )
-			elif args.data.endswith( '.csv' ):
+		if args.data.endswith( '.csv' ):
+			with open(args.data, 'rU') as data:
 				value = list( csv.DictReader( data ) )
-			else:
-				value = simplejson.load( data )
+		else:
+			with open(args.data, 'rb') as data:
+				if args.data.endswith( '.yaml' ):
+					value = yaml.load( data )
+				else:
+					value = simplejson.load( data )
 
 	encoding = args.encoding or 'utf-8'
 	def _write(result, output):
