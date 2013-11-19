@@ -199,15 +199,15 @@ def main():
 	system['request'] = None
 	value = {}
 	if args.data:
-		if args.data.endswith( '.csv' ):
-			with open(args.data, 'rU') as data:
-				value = list( csv.DictReader( data ) )
-		else:
-			with open(args.data, 'rb') as data:
-				if args.data.endswith( '.yaml' ):
-					value = yaml.load( data )
-				else:
-					value = simplejson.load( data )
+		# Mac Excel likes to save CSV files with Mac line endings (\r)
+		# which is weird and breaks the parser unless universal newlines
+		# is in effect.
+		openers = {'.csv':  ('rU', lambda x: list(csv.DictReader(x))),
+				   '.yaml': ('rb', yaml.load),
+				   '.json': ('rb', simplejson.load)}
+		mode, func = openers[os.path.splitext(args.data)[1]]
+		with open(args.data, mode) as data:
+			value = func(data)
 
 	encoding = args.encoding or 'utf-8'
 	def _write(result, output):
