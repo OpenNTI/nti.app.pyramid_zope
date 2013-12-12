@@ -21,8 +21,18 @@ from chameleon.zpt.template import PageTemplateFile
 
 from pyramid_chameleon.renderer import template_renderer_factory
 from pyramid.decorator import reify
-from pyramid.renderers import get_renderer
-from pyramid.interfaces import ITemplateRenderer
+
+# ITemplateRenderer is deprecated as of pyramid 1.5a3,
+# but there is no corresponding pyramid_chameleon
+# release yet, so we still need to implement it, not
+# its parent IRenderer. Avoid the deprecation warning
+# this way
+import pyramid.interfaces
+try:
+	ITemplateRenderer = pyramid.interfaces.__dict__['ITemplateRenderer']
+except KeyError:
+	raise ImportError()
+
 
 from collections import OrderedDict
 
@@ -50,11 +60,14 @@ class _ViewPageTemplateFileWithLoad(ViewPageTemplateFile):
 		d = super(_ViewPageTemplateFileWithLoad,self).builtins
 		d['__loader'] = self._loader
 		# https://github.com/malthe/chameleon/issues/154
-		# We try to get iteration order fixed here:
-		result = OrderedDict()
-		for k in sorted(d.keys()):
-			result[k] = d[k]
-		return result
+		# That's been fixed, so we should no longer
+		# need to do this:
+		## We try to get iteration order fixed here:
+		#result = OrderedDict()
+		#for k in sorted(d.keys()):
+		#	result[k] = d[k]
+		#return result
+		return d
 
 BaseTemplate.expression_types['load'] = PageTemplateFile.expression_types['load']
 
