@@ -1,0 +1,41 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+"""
+
+
+.. $Id$
+"""
+
+from __future__ import print_function, unicode_literals, absolute_import, division
+__docformat__ = "restructuredtext en"
+
+logger = __import__('logging').getLogger(__name__)
+
+# Make viewlets use our version of page template files
+# Unfortunately, the zope.browserpage VPT is slightly
+# incompatible in calling convention
+from zope.viewlet import viewlet
+from zope.browserpage import viewpagetemplatefile
+from z3c.template import template
+from zope.pagetemplate.pagetemplatefile import package_home
+from six import string_types
+from .z3c_zpt import ViewPageTemplateFile
+if viewlet.ViewPageTemplateFile is viewpagetemplatefile.ViewPageTemplateFile:
+	# TODO: Formalize this
+	logger.debug("Monkey-patching zope.viewlet to use z3c.pt")
+	# Best to use a class not a function to avoid changing
+	# calling depth
+	class _VPT(ViewPageTemplateFile):
+		def __init__(self, filename, _prefix=None, content_type=None):
+			path = _prefix
+			if not isinstance(path, string_types) and path is not None:
+				# zope likes to pass the globals
+				path = package_home(path)
+			ViewPageTemplateFile.__init__(self, filename, path=path, content_type=content_type)
+
+	viewlet.ViewPageTemplateFile = _VPT
+if template.ViewPageTemplateFile is viewpagetemplatefile.ViewPageTemplateFile:
+	# They claim that including of z3c.ptcompat does this, I'm not
+	# convinced
+	logger.debug("Monkey-patching z3c.template to use z3c.pt")
+	template.ViewPageTemplateFile = ViewPageTemplateFile
