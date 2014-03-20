@@ -34,8 +34,6 @@ except KeyError:
 	raise ImportError()
 
 
-from collections import OrderedDict
-
 def renderer_factory(info):
 	"""
 	Factory to produce renderers. Intended to be used with asset specs.
@@ -70,6 +68,9 @@ class _ViewPageTemplateFileWithLoad(ViewPageTemplateFile):
 		return d
 
 BaseTemplate.expression_types['load'] = PageTemplateFile.expression_types['load']
+
+# Re-export our version
+ViewPageTemplateFile = _ViewPageTemplateFileWithLoad
 
 @interface.implementer(ITemplateRenderer)
 class ZPTTemplateRenderer(object):
@@ -140,6 +141,33 @@ class ZPTTemplateRenderer(object):
 		#print(result)
 		return result
 
+# Make viewlets use our version of page template files
+# Unfortunately, the zope.browserpage VPT is slightly
+# incompatible in calling convention
+from zope.viewlet import viewlet
+from zope.browserpage import viewpagetemplatefile
+from z3c.template import template
+from zope.pagetemplate.pagetemplatefile import package_home
+from six import string_types
+if viewlet.ViewPageTemplateFile is viewpagetemplatefile.ViewPageTemplateFile:
+	# TODO: Formalize this
+	logger.debug("Monkey-patching zope.viewlet to use z3c.pt")
+	# Best to use a class not a function to avoid changing
+	# calling depth
+	class _VPT(_ViewPageTemplateFileWithLoad):
+		def __init__(self, filename, _prefix=None, content_type=None):
+			path = _prefix
+			if not isinstance(path, string_types) and path is not None:
+				# zope likes to pass the globals
+				path = package_home(path)
+			_ViewPageTemplateFileWithLoad.__init__(self, filename, path=path, content_type=content_type)
+
+	viewlet.ViewPageTemplateFile = _VPT
+if template.ViewPageTemplateFile is viewpagetemplatefile.ViewPageTemplateFile:
+	# They claim that including of z3c.ptcompat does this, I'm not
+	# convinced
+	logger.debug("Monkey-patching z3c.template to use z3c.pt")
+	template.ViewPageTemplateFile = _ViewPageTemplateFileWithLoad
 
 from nti.dataserver.utils import _configure
 import simplejson
@@ -149,11 +177,10 @@ import argparse
 import sys
 from zope.i18n import translate as ztranslate
 import os.path
-import sys
 import z3c.pt.pagetemplate
 import codecs
 from zope.traversing import api as tapi
-from chameleon.tal import RepeatDict, RepeatItem
+from chameleon.tal import RepeatDict
 
 def main():
 	arg_parser = argparse.ArgumentParser( description="Render a single file with JSON data" )

@@ -36,7 +36,10 @@ setup(
 	install_requires=[
 		'setuptools',
 		'pyramid',
+		'z3c.template',
 		'z3c.pt',
+		'z3c.ptcompat',
+		'zope.viewlet',
 		'zope.proxy',
 		'zope.publisher',
 		'zope.i18n',
