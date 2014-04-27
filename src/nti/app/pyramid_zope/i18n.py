@@ -21,7 +21,7 @@ from zope import component
 # directly handle language negotiation in the good zope way
 from zope.i18n.interfaces import IModifiableUserPreferredLanguages
 from zope.i18n.interfaces import IUserPreferredLanguages
-from zope.i18n.interfaces import  IUserPreferredCharsets
+from zope.i18n.interfaces import IUserPreferredCharsets
 
 import pyramid.interfaces
 
@@ -33,6 +33,7 @@ def PyramidBrowserPreferredLanguages(request):
 	# we implement IUserPreferredLanguages on the Pyramid object, but
 	# return an IModifiableUserPreferredLanguages on the Zope object.
 	# This prevents an infinite loop
+	# from zope.publisher.browser import ModifiableBrowserLanguages
 	return IModifiableUserPreferredLanguages( PyramidZopeRequestProxy( request ) )
 
 @interface.implementer(IUserPreferredCharsets)
