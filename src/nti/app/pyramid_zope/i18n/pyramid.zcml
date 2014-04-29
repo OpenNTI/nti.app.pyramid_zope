@@ -10,4 +10,7 @@
 	route 'webapp.i18n.strings_js' to have been defined
 	-->
 	<pyramid:scan package='.views' />
+
+	<pyramid:localenegotiator
+		negotiator=".adapters.preferred_language_locale_negotiator" />
 </configure>

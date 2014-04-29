@@ -16,4 +16,7 @@
 	<!-- Special request languages -->
 	<adapter factory=".adapters.PreferredLanguagesPolicy" />
 
+	<!-- Pyramid ITranslationDirectories -->
+	<utility factory=".adapters.ZopeTranslationDirectories" />
+
 </configure>

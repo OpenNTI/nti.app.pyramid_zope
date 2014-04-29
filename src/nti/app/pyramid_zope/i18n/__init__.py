@@ -47,9 +47,15 @@ cookies are present or an authenticated user is present, we make the
 request object provide that interface. In this way, our policy is used
 to override anything else.
 
-.. todo:: We might need to provide a Pyramid localenegotiator that does the same thing, plus
-	point pyramid to the same translationdir. Alternately, we could register
-	an IChameleonTranslate object.
+Pyramid/Zope Integration
+========================
+
+The Zope I18N system is more powerful and flexible than the Pyramid system.
+The Pyramid system is based simply on providing one locale name and a list
+of directories containing translations. We implement Pyramid's
+:class:`pyramid.interfaces.ILocaleNegotiator` and :class:`pyramid.interfaces.ITranslationDirectories`
+based on the information we gather from Zope. In this way, the Pyramid
+Chameleon support, for example, uses the same information as other places.
 
 
 .. $Id$

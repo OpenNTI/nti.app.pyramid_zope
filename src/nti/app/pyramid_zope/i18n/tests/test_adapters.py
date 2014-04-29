@@ -36,6 +36,7 @@ from pyramid.events import ContextFound
 def adjust(request):
 	notify(ContextFound(request))
 
+from ..adapters import preferred_language_locale_negotiator
 
 
 class TestApplicationRequestPolicy(ApplicationLayerTest):
@@ -48,22 +49,27 @@ class TestApplicationRequestPolicy(ApplicationLayerTest):
 	def _langs(self):
 		return IUserPreferredLanguages(self.request).getPreferredLanguages()
 
+	def _locale(self):
+		return preferred_language_locale_negotiator(self.request)
+
 	def test_adjust_interface_blank(self):
 		# Initially, nothing
 		adjust(self.request)
 		assert_that( self.request, does_not(provides(IPreferredLanguagesRequest)) )
 		assert_that( self._langs(), is_empty() )
+		assert_that( self._locale(), is_('en') )
 
 	def test_adjust_zope_cookie(self):
 		self.request.cookies['I18N_LANGUAGE'] = 'ru'
 		adjust(self.request)
 		assert_that( self._langs(), is_(['ru']))
+		assert_that( self._locale(), is_('ru') )
 
 	def test_adjust_pyramid_property(self):
 		self.request._LOCALE_ = 'ru'
 		adjust(self.request)
 		assert_that( self._langs(), is_(['ru']))
-
+		assert_that( self._locale(), is_('ru') )
 
 	@fudge.patch('nti.app.i18n.subscribers.get_remote_user',
 				 'nti.app.i18n.adapters.get_remote_user')
@@ -78,7 +84,7 @@ class TestApplicationRequestPolicy(ApplicationLayerTest):
 
 		adjust(self.request)
 		assert_that( self._langs(), is_(['ru']))
-
+		assert_that( self._locale(), is_('ru') )
 
 	@fudge.patch('nti.app.i18n.subscribers.get_remote_user',
 				 'nti.app.i18n.adapters.get_remote_user')
@@ -95,6 +101,7 @@ class TestApplicationRequestPolicy(ApplicationLayerTest):
 		# specified for this user, is empty (this would trigger
 		# the translation domain fallback)
 		assert_that( self._langs(), is_([]))
+		assert_that( self._locale(), is_('en') )
 
 
 	@fudge.patch('nti.app.i18n.subscribers.get_remote_user',
@@ -112,3 +119,17 @@ class TestApplicationRequestPolicy(ApplicationLayerTest):
 		# The accept header rules
 
 		assert_that( self._langs(), is_(['ru']))
+		assert_that( self._locale(), is_('ru') )
+
+from pyramid.interfaces import ITranslationDirectories
+from zope import component
+from hamcrest import has_item
+import os
+
+class TestApplicationTranslationDirs(ApplicationLayerTest):
+
+	def test_translation_dirs(self):
+		import nti.appserver
+		dirs = component.getUtility(ITranslationDirectories)
+		assert_that( dirs, has_item(os.path.join(os.path.dirname(nti.appserver.__file__),
+												 'locales')) )

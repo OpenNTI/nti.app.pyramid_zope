@@ -94,3 +94,78 @@ class PreferredLanguagesPolicy(object):
 		browser_request = IBrowserRequest(self.request)
 		browser_langs = IModifiableUserPreferredLanguages(browser_request)
 		return browser_langs.getPreferredLanguages()
+
+from pyramid.interfaces import ILocaleNegotiator
+from zope.i18n.locales import locales
+from zope.i18n.locales import LoadLocaleError
+
+@interface.provider(ILocaleNegotiator)
+def preferred_language_locale_negotiator(request):
+	"""
+	A pyramid locale negotiator that piggybacks off
+	the preferred language support. We return a valid locale
+	name consisting of at most language-territory, but at least language.
+	A valid locale is one for which we have available locale data,
+	not necessarily one for which any translation data is available.
+	"""
+
+	# This code is similar to that in zope.publisher.http.HTTPRequest.
+	# it's point is to find the most specific available locale possible.
+	# We differ in that, instead of returning a generic default, we
+	# specifically return the english default. We also differ in that we
+	# return a locale name instead of a locale object.
+
+	result = _UserPreferredLanguages.PREFERRED_LANGUAGES[0]
+
+	pref_langs = IUserPreferredLanguages(request, None)
+	pref_langs = pref_langs.getPreferredLanguages() if pref_langs is not None else ()
+
+	for lang in pref_langs:
+		parts = (lang.split('-') + [None, None])[:3]
+		try:
+			locales.getLocale(*parts)
+			result = lang
+			break
+		except LoadLocaleError:
+			continue
+
+	return result
+
+from pyramid.interfaces import ITranslationDirectories
+from zope.i18n.interfaces import ITranslationDomain
+from nti.utils.property import Lazy
+import os
+
+@interface.implementer(ITranslationDirectories)
+class ZopeTranslationDirectories(object):
+	"""
+	Implements the readable contract of Pyramid's translation directory
+	list by querying for the zope translation domain objects. This way
+	we don't have to repeat the configuration.
+
+	.. note:: This queries just once, the first time it is used.
+
+	.. note:: We lose the order or registrations, if that mattered.
+	"""
+
+	def __iter__(self):
+		return iter(self._dirs)
+
+	def __repr__(self):
+		return repr(list(self))
+
+	@Lazy
+	def _dirs(self):
+		dirs = []
+		domains = component.getAllUtilitiesRegisteredFor(ITranslationDomain)
+		for domain in domains:
+			for paths in domain.getCatalogsInfo().values():
+				# The catalog info is a dictionary of language to [file]
+				if len(paths) == 1 and paths[0].endswith('.mo'):
+					path = paths[0]
+					# strip off the file, go to the directory containing the
+					# language directories
+					path = os.path.sep.join(path.split(os.path.sep)[:-3])
+					if path not in dirs:
+						dirs.append(path)
+		return dirs
