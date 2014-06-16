@@ -48,7 +48,20 @@ def _adjust_request_interface_for_preferred_languages(event):
 
 	# Ok, is there an authenticated user with preferred languages?
 	# (We leave detecting defaults up to the actual policy)
-	remote_user = get_remote_user(request)
+	try:
+		remote_user = get_remote_user(request)
+	except LookupError:
+		# If we're not in a site, we would get an
+		# InappropriateSiteError here.
+		# We've only actually seen this using pyramid_debugtoolbar
+		# when handling an earlier exception of some type.
+		# See also root_resource_factory...note that that place
+		# specifically checks for the debug toolbar URL, with
+		# request.path.startswith( '/_debug_toolbar/' ),
+		# but I don't really feel like that's a necessary safety check
+		# here
+		remote_user = None
+
 	remote_user_langs = remote_user is not None and IUserPreferredLanguages(remote_user)
 	if remote_user_langs and remote_user_langs.getPreferredLanguages():
 		interface.alsoProvides(request, IPreferredLanguagesRequest)

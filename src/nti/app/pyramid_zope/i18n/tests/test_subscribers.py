@@ -71,3 +71,12 @@ class TestSubscribers(unittest.TestCase):
 
 		adjust(self.request)
 		assert_that(self.request, provides(IPreferredLanguagesRequest))
+
+	@fudge.patch('nti.app.i18n.subscribers.get_remote_user')
+	def test_adjust_remote_user_raises(self, fake_get):
+		from nti.dataserver.interfaces import InappropriateSiteError
+
+		fake_get.is_callable().raises(InappropriateSiteError("Outside site"))
+
+		adjust(self.request)
+		assert_that(self.request, does_not(provides(IPreferredLanguagesRequest)))
