@@ -169,9 +169,14 @@ def main():
 							 dest='repeat_on',
 							 help="If given, a traversal path that specifies something that can be "
 							 "iterated; the template will be applied repeatedly to the elements.")
+	arg_parser.add_argument( '--repeat-on-sequence-name',
+							 dest='repeat_on_sequence_name',
+							 help="If given along with --repeat-on, this name will be bound in"
+							 "the options dictionary as the sequence that --repeat-on is iterating"
+							 )
 	arg_parser.add_argument( '--repeat-on-name',
 							 dest='repeat_on_name',
-							 help="The name of the element being iterated.")
+							 help="The name of the element being iterated. REQUIRED if --repeat-on is given")
 	arg_parser.add_argument( '--repeat-as-iterable',
 							 dest='repeat_iter',
 							 action='store_true',
@@ -209,7 +214,7 @@ def main():
 	system = {}
 	system['view'] = View()
 	system['request'] = None
-	value = {}
+	options = {}
 	if args.data:
 		# Mac Excel likes to save CSV files with Mac line endings (\r)
 		# which is weird and breaks the parser unless universal newlines
@@ -219,7 +224,7 @@ def main():
 				   '.json': ('rb', simplejson.load)}
 		mode, func = openers[os.path.splitext(args.data)[1]]
 		with open(args.data, mode) as data:
-			value = func(data)
+			options = func(data)
 
 	encoding = args.encoding or 'utf-8'
 	def _write(result, output):
@@ -235,25 +240,43 @@ def main():
 
 	if args.repeat_on:
 		output_base, output_ext = os.path.splitext( args.output )
-		# Establish a repeat item for the pages. This will be visible
+
+		repeat_on = tapi.traverse( options, args.repeat_on )
+		if args.repeat_on_sequence_name:
+			repeat_on = list(repeat_on) # so multiple iterations work
+			options[args.repeat_on_sequence_name] = repeat_on
+
+		# Establish a repeat dict for the pages. This will be visible
 		# as options/repeat, leaving the builtin repeat as specified.
-		# If our template class overrode _pt_get_context, we could
+		# (If our template class overrode _pt_get_context, we could
 		# promote this to the top-level (builtin) scope (chameleon will
 		# accept that, z3c.pt is the one that prevents it by wrapping
-		# ALL keyword args in the options dict)
-		value['repeat'] = RepeatDict({})
-		repeat_on = tapi.traverse( value, args.repeat_on )
-		repeat_iter, _ = value['repeat'](args.repeat_on_name, repeat_on)
-		repeat_item = value['repeat'][args.repeat_on_name]
-		for val in repeat_iter:
-			i = repeat_item.index
-			raw_val = val
-			if args.repeat_iter:
-				val = [val]
+		# ALL keyword args in the options dict)).
+		# When you specify the repeat_on_name, the RepeatItem will then be
+		# available at 'options/repeat/$repeat_on_name', giving you access
+		# to such things as 'index'.
+		# NOTE: For that to work, we have to iterate across the returned
+		# iterator, because the RepeatItem that's in the dict must stay in
+		# sync, and it does this by peeking into the iterator itself.
+		global_repeat = options['repeat'] = RepeatDict({})
 
-			repeat_dict = value.copy()
-			repeat_dict.update( { args.repeat_on_name: val } )
-			result = renderer( repeat_dict, system )
+		# register the repeat item...
+		global_repeat(args.repeat_on_name, repeat_on)
+		# ...get it...
+		global_repeat_item  = global_repeat[args.repeat_on_name]
+		# ...now iterate on it
+		global_repitition_iterator = iter(global_repeat_item)
+
+		for repitition_value in global_repitition_iterator:
+			i = global_repeat_item.index # auto-advanced
+			raw_val = repitition_value
+
+			if args.repeat_iter: # wrap if required
+				repitition_value = [repitition_value]
+
+			options_for_this_repitition = options.copy()
+			options_for_this_repitition[args.repeat_on_name] = repitition_value
+			result = renderer( options_for_this_repitition, system )
 
 			output_specific = None
 			if args.repeat_filename:
@@ -272,7 +295,7 @@ def main():
 			output = output_base + os.path.extsep + output_specific + output_ext
 			_write( result, output )
 	else:
-		result = renderer( value, system )
+		result = renderer( options, system )
 		_write( result, args.output )
 
 
