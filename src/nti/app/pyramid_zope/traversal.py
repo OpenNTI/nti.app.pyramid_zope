@@ -8,12 +8,15 @@ $Id$
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
 
+logger = __import__('logging').getLogger(__name__)
+
 from pyramid import traversal
 
 lineage = traversal.lineage
 find_interface = traversal.find_interface
 
 from zope.location.interfaces import LocationError
+from pyramid.httpexceptions import HTTPNotFound
 
 from zope import interface
 from zope.event import notify
@@ -32,6 +35,24 @@ from pyramid.compat import is_nonstr_iter, decode_path_info
 
 split_path_info = traversal.split_path_info
 empty = traversal.empty
+
+def _notify_before_traverse_event(ob, request):
+	"""
+	Notifies a BeforeTraverseEvent, but safely: if the
+	handlers themselves raise a location error, turn that into
+	a HTTP 404 exception.
+
+	Because handlers are deliberately doing this, we stop
+	traversal and abort rather than try to return an information
+	dictionary and find a view and context, etc. This is limiting, but
+	safe.
+	"""
+	try:
+		notify( BeforeTraverseEvent( ob, request ) )
+	except LocationError:
+		# this is often a setup or programmer error
+		logger.debug("LocationError from traverse subscribers", exc_info=True)
+		raise HTTPNotFound("Traversal failed")
 
 @interface.implementer(pyramid.interfaces.ITraverser)
 class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
@@ -121,7 +142,7 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 			for segment in vpath_tuple:
 				# JAM: Fire traversal events, mainly so sites get installed. See
 				# zope.publisher.base.
-				notify( BeforeTraverseEvent( ob, request ) )
+				_notify_before_traverse_event(ob, request)
 				# JAM: Notice that checking for '@@' is special cased, and
 				# doesn't go through the normal namespace lookup as it would in
 				# plain zope traversal.
@@ -184,7 +205,7 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 		# JAM: Also fire before traversal for the actual context item, since we
 		# won't actually traverse into it. Be sure not to fire multiple times for this (E.g., the root)
 		# This logic is complicated by the multi-returns above.
-		notify( BeforeTraverseEvent( ob, request ) )
+		_notify_before_traverse_event(ob, request)
 
 		return {'context': ob,
 				'view_name': empty,
