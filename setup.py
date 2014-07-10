@@ -6,7 +6,11 @@ VERSION = '0.0.0'
 entry_points = {
 	'console_scripts': [
 		'nti_zpt_render = nti.app.pyramid_zope.z3c_zpt:main',
-	]
+	],
+    "z3c.autoinclude.plugin": [
+		'target = nti.app',
+	],
+
 }
 
 setup(
