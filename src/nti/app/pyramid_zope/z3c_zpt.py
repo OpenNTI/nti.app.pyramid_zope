@@ -276,7 +276,12 @@ def main():
 
 			options_for_this_repitition = options.copy()
 			options_for_this_repitition[args.repeat_on_name] = repitition_value
+
 			result = renderer( options_for_this_repitition, system )
+
+			# We avoiding rendering this for some reason; next.
+			if not result or result.isspace():
+				continue
 
 			output_specific = None
 			if args.repeat_filename:
