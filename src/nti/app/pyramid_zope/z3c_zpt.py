@@ -191,6 +191,10 @@ def main():
 	arg_parser.add_argument( '--encoding',
 							 dest='encoding',
 							 help="The encoding of the output file." )
+	arg_parser.add_argument( '--repeat-exclude-field',
+							 dest='repeat_exclude_field',
+							 help="If given, a field looked for in order to exclude the given element from "
+							 "the rendering process." )
 
 	args = arg_parser.parse_args()
 
@@ -244,6 +248,12 @@ def main():
 		repeat_on = tapi.traverse( options, args.repeat_on )
 		if args.repeat_on_sequence_name:
 			repeat_on = list(repeat_on) # so multiple iterations work
+			options[args.repeat_on_sequence_name] = repeat_on
+
+		if args.repeat_exclude_field:
+			# Filter out the elements we do not want and add the dict back in.
+			exclude_field = args.repeat_exclude_field
+			repeat_on = [x for x in repeat_on if exclude_field not in x]
 			options[args.repeat_on_sequence_name] = repeat_on
 
 		# Establish a repeat dict for the pages. This will be visible
