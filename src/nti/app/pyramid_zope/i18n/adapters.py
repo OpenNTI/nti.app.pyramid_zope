@@ -16,14 +16,16 @@ from zope import component
 
 from zope.i18n.interfaces import IUserPreferredLanguages
 from zope.i18n.interfaces import IModifiableUserPreferredLanguages
-from zope.publisher.interfaces.browser import IBrowserRequest
-from nti.dataserver.interfaces import IUser
 
-from .interfaces import IPreferredLanguagesRequest
+from zope.publisher.interfaces.browser import IBrowserRequest
 
 from pyramid.i18n import default_locale_negotiator
 
 from nti.app.authentication import get_remote_user
+
+from nti.dataserver.interfaces import IUser
+
+from .interfaces import IPreferredLanguagesRequest
 
 # The user-based stuff will probably move around when we make it
 # a mutable preference?
@@ -51,7 +53,6 @@ _user_preferred_languages = _UserPreferredLanguages(None)
 @component.adapter(IUser)
 def UserPreferredLanguages(user):
 	return _user_preferred_languages
-
 
 @interface.implementer(IUserPreferredLanguages)
 @component.adapter(IPreferredLanguagesRequest)
@@ -95,9 +96,10 @@ class PreferredLanguagesPolicy(object):
 		browser_langs = IModifiableUserPreferredLanguages(browser_request)
 		return browser_langs.getPreferredLanguages()
 
-from pyramid.interfaces import ILocaleNegotiator
 from zope.i18n.locales import locales
 from zope.i18n.locales import LoadLocaleError
+
+from pyramid.interfaces import ILocaleNegotiator
 
 @interface.provider(ILocaleNegotiator)
 def preferred_language_locale_negotiator(request):
@@ -131,10 +133,13 @@ def preferred_language_locale_negotiator(request):
 
 	return result
 
-from pyramid.interfaces import ITranslationDirectories
-from zope.i18n.interfaces import ITranslationDomain
-from nti.utils.property import Lazy
 import os
+
+from zope.i18n.interfaces import ITranslationDomain
+
+from pyramid.interfaces import ITranslationDirectories
+
+from nti.common.property import Lazy
 
 @interface.implementer(ITranslationDirectories)
 class ZopeTranslationDirectories(object):

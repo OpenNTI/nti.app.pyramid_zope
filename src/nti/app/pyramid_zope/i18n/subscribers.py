@@ -14,13 +14,14 @@ logger = __import__('logging').getLogger(__name__)
 from zope import component
 from zope import interface
 
-from .interfaces import IPreferredLanguagesRequest
 from zope.i18n.interfaces import IUserPreferredLanguages
-from pyramid.interfaces import IContextFound
 
+from pyramid.interfaces import IContextFound
 from pyramid.i18n import default_locale_negotiator
 
 from nti.app.authentication import get_remote_user
+
+from .interfaces import IPreferredLanguagesRequest
 
 @component.adapter(IContextFound)
 def _adjust_request_interface_for_preferred_languages(event):

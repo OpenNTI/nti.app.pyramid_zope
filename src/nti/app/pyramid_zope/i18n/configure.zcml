@@ -5,8 +5,8 @@
 			xmlns:zcml="http://namespaces.zope.org/zcml">
 
 	<include package="zope.component" file="meta.zcml" />
-	<include package="zope.component" />
 	<include package="zope.security" file="meta.zcml" />
+	<include package="zope.component" />
 	<include package="zope.security" />
 
 	<subscriber handler=".subscribers._adjust_request_interface_for_preferred_languages" />
