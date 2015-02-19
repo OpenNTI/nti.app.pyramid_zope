@@ -4,7 +4,7 @@
 Support for language and charset negotiation for
 pyramid requests.
 
-$Id$
+.. $Id$
 """
 
 from __future__ import print_function, unicode_literals, absolute_import, division
@@ -12,16 +12,15 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-
-from zope import interface
 from zope import component
+from zope import interface
 
 # What the hell. Since we now can make a pyramid request look like a
 # Zope request, we might as well be able to make a Pyramid request
 # directly handle language negotiation in the good zope way
-from zope.i18n.interfaces import IModifiableUserPreferredLanguages
-from zope.i18n.interfaces import IUserPreferredLanguages
 from zope.i18n.interfaces import IUserPreferredCharsets
+from zope.i18n.interfaces import IUserPreferredLanguages
+from zope.i18n.interfaces import IModifiableUserPreferredLanguages
 
 import pyramid.interfaces
 

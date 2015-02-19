@@ -4,8 +4,9 @@
 Pyramid template renderer using z3c.pt, for the path syntax
 and other niceties that Chameleon itself doesn't support
 
-$Id$
+.. $Id$
 """
+
 from __future__ import print_function, unicode_literals, absolute_import
 __docformat__ = "restructuredtext en"
 
@@ -17,10 +18,9 @@ from zope.publisher.interfaces.browser import IBrowserRequest
 
 from z3c.pt.pagetemplate import BaseTemplate
 from z3c.pt.pagetemplate import ViewPageTemplateFile
-from chameleon.zpt.template import PageTemplateFile
 
-from pyramid_chameleon.renderer import template_renderer_factory
 from pyramid.decorator import reify
+from pyramid_chameleon.renderer import template_renderer_factory
 
 # ITemplateRenderer is deprecated as of pyramid 1.5a3,
 # but there is no corresponding pyramid_chameleon
@@ -33,6 +33,7 @@ try:
 except KeyError:
 	raise ImportError()
 
+from chameleon.zpt.template import PageTemplateFile
 
 def renderer_factory(info):
 	"""
@@ -141,18 +142,24 @@ class ZPTTemplateRenderer(object):
 		#print(result)
 		return result
 
-from nti.dataserver.utils import _configure
-import simplejson
-import yaml
 import csv
-import argparse
 import sys
-from zope.i18n import translate as ztranslate
-import os.path
-import z3c.pt.pagetemplate
+import yaml
 import codecs
+import os.path
+import argparse
+
+import simplejson
+
+from zope.i18n import translate as ztranslate
+
 from zope.traversing import api as tapi
+
+import z3c.pt.pagetemplate
+
 from chameleon.tal import RepeatDict
+
+from nti.dataserver.utils import _configure
 
 def main():
 	arg_parser = argparse.ArgumentParser( description="Render a single file with JSON data" )
@@ -312,7 +319,6 @@ def main():
 	else:
 		result = renderer( options, system )
 		_write( result, args.output )
-
 
 	sys.exit( 0 )
 

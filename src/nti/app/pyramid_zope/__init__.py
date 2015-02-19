@@ -1,8 +1,6 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
-
-
 .. $Id$
 """
 
@@ -11,19 +9,26 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+import os
+from six import string_types
+
+from zope.browserpage import viewpagetemplatefile
+
 # Make viewlets use our version of page template files
 # Unfortunately, the zope.browserpage VPT is slightly
 # incompatible in calling convention
 from zope.viewlet import viewlet
-from zope.browserpage import viewpagetemplatefile
-from z3c.template import template
+
 from zope.pagetemplate.pagetemplatefile import package_home
-from six import string_types
+
+from z3c.template import template
+
 from .z3c_zpt import ViewPageTemplateFile
-import os
+
 # Best to use a class not a function to avoid changing
 # calling depth
 class _VPT(ViewPageTemplateFile):
+
 	def __init__(self, filename, _prefix=None, content_type=None):
 		path = _prefix
 		if not isinstance(path, string_types) and path is not None:
@@ -36,7 +41,6 @@ class _VPT(ViewPageTemplateFile):
 		ViewPageTemplateFile.__init__(self, filename, path=path, content_type=content_type,
 									  auto_reload=auto_reload,
 									  debug=debug)
-
 
 if viewlet.ViewPageTemplateFile is viewpagetemplatefile.ViewPageTemplateFile:
 	# TODO: Formalize this

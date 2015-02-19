@@ -8,8 +8,8 @@
 	<include package="zope.security" file="meta.zcml" />
 	<include package="zope.security" />
 
-	<adapter factory=".i18n.PyramidBrowserPreferredLanguages" />
 	<adapter factory=".i18n.PyramidBrowserPreferredCharsets" />
+	<adapter factory=".i18n.PyramidBrowserPreferredLanguages" />
 
 	<adapter factory=".request.PyramidZopeRequestProxy"
 			 provides="zope.publisher.interfaces.browser.IBrowserRequest" />

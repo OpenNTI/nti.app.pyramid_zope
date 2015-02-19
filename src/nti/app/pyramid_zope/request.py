@@ -6,7 +6,7 @@ like a Zope request.
 
 Partially based on ideas from :mod:`pyramid_zope_request`
 
-$Id$
+.. $Id$
 """
 
 from __future__ import print_function, unicode_literals, absolute_import
@@ -14,23 +14,26 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
-from zope import interface
 from zope import component
-from zope.i18n.locales import locales
-from zope.security.management import getInteraction
-from zope.security.interfaces import NoInteraction
+from zope import interface
+
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
-from pyramid.i18n import get_locale_name
-import pyramid.interfaces
+from zope.i18n.locales import locales
 
 from zope.proxy import non_overridable, getProxiedObject
 from zope.proxy.decorator import SpecificationDecoratorBase
-import zope.publisher.interfaces.browser
-import zope.publisher.browser
-#import zope.publisher.interfaces.http # For IHTTPResponse, should we need it
 
-from nti.utils.property import alias
+# import zope.publisher.browser
+import zope.publisher.interfaces.browser
+
+from zope.security.management import getInteraction
+from zope.security.interfaces import NoInteraction
+
+import pyramid.interfaces
+from pyramid.i18n import get_locale_name
+
+from nti.common.property import alias
 
 # Implement the request
 # and the "skin". In zope, the skin is changeable (IBrowserRequest
