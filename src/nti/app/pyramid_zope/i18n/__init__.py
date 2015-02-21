@@ -3,7 +3,6 @@
 """
 Support for application-level (request, context and user based) internationalization.
 
-
 Negotiation
 ===========
 
