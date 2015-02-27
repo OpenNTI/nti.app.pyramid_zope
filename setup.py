@@ -7,33 +7,32 @@ entry_points = {
 	'console_scripts': [
 		'nti_zpt_render = nti.app.pyramid_zope.z3c_zpt:main',
 	],
-    "z3c.autoinclude.plugin": [
+	"z3c.autoinclude.plugin": [
 		'target = nti.app',
 	],
 
 }
 
 setup(
-    name = 'nti.app.pyramid_zope',
-    version = VERSION,
-    author = 'Jason Madden',
-    author_email = 'jason@nextthought.com',
-    description = "Support for a more Zope-like pyramid.",
-    long_description = codecs.open('README.rst', encoding='utf-8').read(),
-    license = 'Proprietary',
-    keywords = 'pyramid zope',
-    #url = 'https://github.com/NextThought/nti.nose_traceback_info',
-    classifiers = [
-        'Intended Audience :: Developers',
-        'Natural Language :: English',
-        'Operating System :: OS Independent',
+	name = 'nti.app.pyramid_zope',
+	version = VERSION,
+	author = 'Jason Madden',
+	author_email = 'jason@nextthought.com',
+	description = "Support for a more Zope-like pyramid.",
+	long_description = codecs.open('README.rst', encoding='utf-8').read(),
+	license = 'Proprietary',
+	keywords = 'pyramid zope',
+	classifiers = [
+		'Intended Audience :: Developers',
+		'Natural Language :: English',
+		'Operating System :: OS Independent',
 		'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 2.7',
+		'Programming Language :: Python :: 2.7',
 		'Programming Language :: Python :: 3',
 		'Programming Language :: Python :: 3.3',
-        'Topic :: Software Development :: Testing'
+		'Topic :: Software Development :: Testing'
 		'Framework :: Pyramid',
-        ],
+	],
 	packages=find_packages('src'),
 	package_dir={'': 'src'},
 	namespace_packages=['nti', 'nti.app'],
@@ -50,3 +49,4 @@ setup(
 	],
 	entry_points=entry_points
 )
+
