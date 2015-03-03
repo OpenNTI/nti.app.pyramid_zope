@@ -3,38 +3,39 @@
 """
 Support for resource tree traversal.
 
-$Id$
+.. $Id$
 """
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope import interface
+from zope.event import notify
+
+from zope.location.interfaces import LocationError
+
+from zope.traversing import api as ztraversing
+from zope.traversing.interfaces import BeforeTraverseEvent, ITraversable
+
+import pyramid.interfaces
 from pyramid import traversal
+from pyramid.interfaces import VH_ROOT_KEY
+from pyramid.exceptions import URLDecodeError
+from pyramid.httpexceptions import HTTPNotFound
+from pyramid.compat import is_nonstr_iter, decode_path_info
 
 lineage = traversal.lineage
 find_interface = traversal.find_interface
 
-from zope.location.interfaces import LocationError
-from pyramid.httpexceptions import HTTPNotFound
-
-from zope import interface
-from zope.event import notify
-from zope.traversing import api as ztraversing
-from zope.traversing.interfaces import BeforeTraverseEvent, ITraversable
-
 from zope.deferredimport import deprecatedFrom
-deprecatedFrom( "Prefer nti.dataserver.traversal",
-				"nti.dataserver.traversal",
-				"resource_path", "normal_resource_path" )
+deprecatedFrom( "Prefer nti.traversal.traversal",
+				"nti.traversal.traversal",
+				"resource_path", 
+				"normal_resource_path" )
 
-import pyramid.interfaces
-from pyramid.interfaces import VH_ROOT_KEY
-from pyramid.exceptions import URLDecodeError
-from pyramid.compat import is_nonstr_iter, decode_path_info
-
-split_path_info = traversal.split_path_info
 empty = traversal.empty
+split_path_info = traversal.split_path_info
 
 def _notify_before_traverse_event(ob, request):
 	"""
