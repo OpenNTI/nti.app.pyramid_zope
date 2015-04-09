@@ -148,6 +148,7 @@ import yaml
 import codecs
 import os.path
 import argparse
+import datetime
 
 import simplejson
 
@@ -248,7 +249,12 @@ def main():
 		# should handle everything)
 		with codecs.open(output, 'wb', encoding=encoding, errors='xmlcharrefreplace') as f:
 			f.write( result )
-
+	
+	#It is useful to have the render time available to the templates
+	#There doesn't seem to be a way to do this entirely in the templates
+	#so we help out here.
+	options['nti_render_time'] = datetime.datetime.now()
+	
 	if args.repeat_on:
 		output_base, output_ext = os.path.splitext( args.output )
 
