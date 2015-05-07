@@ -14,16 +14,17 @@ from zope.publisher.interfaces.browser import IBrowserRequest
 from pyramid.request import Request
 from pyramid.interfaces import IRequest
 
-from nti.testing import base
+from nti.testing.base import SharedConfiguringTestBase
 
 from nti.testing.matchers import verifiably_provides
 
-setUpModule = lambda: base.module_setup( set_up_packages=(__name__,) )
-tearDownModule = base.module_teardown
+class TestRequest(SharedConfiguringTestBase):
+	set_up_packages = (__name__,)
+	def test_adapts(self):
+		request = Request.blank('/')
+		zrequest = IBrowserRequest( request )
+		from zope import interface
 
-def test_adapts():
-	request = Request.blank('/')
-	zrequest = IBrowserRequest( request )
-	assert_that( zrequest, verifiably_provides(IBrowserRequest) )
-	# and it's still a valid pyramid request
-	assert_that( zrequest, verifiably_provides(IRequest) )
+		assert_that( zrequest, verifiably_provides(IBrowserRequest) )
+		# and it's still a valid pyramid request
+		assert_that( zrequest, verifiably_provides(IRequest) )
