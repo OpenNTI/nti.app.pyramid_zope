@@ -16,8 +16,7 @@ from zope import interface
 
 from zope.publisher.interfaces.browser import IBrowserRequest
 
-from z3c.pt.pagetemplate import BaseTemplate
-from z3c.pt.pagetemplate import ViewPageTemplateFile
+import z3c.pt.pagetemplate
 
 from pyramid.decorator import reify
 from pyramid_chameleon.renderer import template_renderer_factory
@@ -43,7 +42,7 @@ def renderer_factory(info):
 	"""
 	return template_renderer_factory(info, ZPTTemplateRenderer)
 
-class _ViewPageTemplateFileWithLoad(ViewPageTemplateFile):
+class _ViewPageTemplateFileWithLoad(z3c.pt.pagetemplate.ViewPageTemplateFile):
 	"""
 	Enables the load: expression type for convenience.
 	"""
@@ -68,7 +67,7 @@ class _ViewPageTemplateFileWithLoad(ViewPageTemplateFile):
 		#return result
 		return d
 
-BaseTemplate.expression_types['load'] = PageTemplateFile.expression_types['load']
+z3c.pt.pagetemplate.BaseTemplate.expression_types['load'] = PageTemplateFile.expression_types['load']
 
 # Re-export our version
 ViewPageTemplateFile = _ViewPageTemplateFileWithLoad
@@ -155,8 +154,6 @@ import simplejson
 from zope.i18n import translate as ztranslate
 
 from zope.traversing import api as tapi
-
-import z3c.pt.pagetemplate
 
 from chameleon.tal import RepeatDict
 
