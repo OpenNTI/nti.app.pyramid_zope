@@ -24,7 +24,7 @@ from zope.i18n.interfaces import IModifiableUserPreferredLanguages
 
 import pyramid.interfaces
 
-from .request import PyramidZopeRequestProxy
+from nti.app.pyramid_zope.request import PyramidZopeRequestProxy
 
 @interface.implementer(IUserPreferredLanguages)
 @component.adapter(pyramid.interfaces.IRequest)
@@ -33,7 +33,7 @@ def PyramidBrowserPreferredLanguages(request):
 	# return an IModifiableUserPreferredLanguages on the Zope object.
 	# This prevents an infinite loop
 	# from zope.publisher.browser import ModifiableBrowserLanguages
-	return IModifiableUserPreferredLanguages( PyramidZopeRequestProxy( request ) )
+	return IModifiableUserPreferredLanguages(PyramidZopeRequestProxy(request))
 
 @interface.implementer(IUserPreferredCharsets)
 @component.adapter(pyramid.interfaces.IRequest)
@@ -41,4 +41,4 @@ def PyramidBrowserPreferredCharsets(request):
 	# Unfortunately, the trick we use for UserPreferredLanguages does
 	# not work here
 	from zope.publisher.http import HTTPCharsets
-	return HTTPCharsets( PyramidZopeRequestProxy( request ) )
+	return HTTPCharsets(PyramidZopeRequestProxy(request))

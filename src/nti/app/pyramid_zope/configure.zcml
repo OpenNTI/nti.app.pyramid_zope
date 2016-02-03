@@ -13,4 +13,5 @@
 
 	<adapter factory=".request.PyramidZopeRequestProxy"
 			 provides="zope.publisher.interfaces.browser.IBrowserRequest" />
+
 </configure>

@@ -23,7 +23,7 @@ from zope.pagetemplate.pagetemplatefile import package_home
 
 from z3c.template import template
 
-from .z3c_zpt import ViewPageTemplateFile
+from nti.app.pyramid_zope.z3c_zpt import ViewPageTemplateFile
 
 # Best to use a class not a function to avoid changing
 # calling depth

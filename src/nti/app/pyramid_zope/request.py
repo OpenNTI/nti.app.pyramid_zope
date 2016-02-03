@@ -21,14 +21,16 @@ from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
 from zope.i18n.locales import locales
 
-from zope.proxy import non_overridable, getProxiedObject
+from zope.proxy import non_overridable
+from zope.proxy import getProxiedObject
+
 from zope.proxy.decorator import SpecificationDecoratorBase
 
 # import zope.publisher.browser
 import zope.publisher.interfaces.browser
 
-from zope.security.management import getInteraction
 from zope.security.interfaces import NoInteraction
+from zope.security.management import getInteraction
 
 import pyramid.interfaces
 from pyramid.i18n import get_locale_name
@@ -62,9 +64,9 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 		looking at what :mod:`pyramid_zope_request` does.
 	"""
 
-	def __init__( self, base ):
-		SpecificationDecoratorBase.__init__( self, base )
-		if getattr( base, 'registry', None ) is None:
+	def __init__(self, base):
+		SpecificationDecoratorBase.__init__(self, base)
+		if getattr(base, 'registry', None) is None:
 			base.registry = component.getSiteManager()
 
 		base.response.getHeader = lambda k: base.response.headers[k]
@@ -72,7 +74,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 		def setHeader(name, value, literal=False):
 			# Go to bytes for python 2 if incoming was a string
 			name = str(name)
-			value = str(value) if isinstance(value,unicode) else value
+			value = str(value) if isinstance(value, unicode) else value
 			if name.lower() == 'content-type':
 				# work around that webob stores the charset
 				# in the header ``Content-type``, zope kills the charset
@@ -87,10 +89,10 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 		base.response.addHeader = setHeader
 
 		base.response.getStatus = lambda: base.response.status_code
-		base.response.setStatus = lambda status_code: setattr(base.response, 'status_code', status_code )
+		base.response.setStatus = lambda status_code: setattr(base.response, 'status_code', status_code)
 
 	@non_overridable
-	def get( self, key, default=None ):
+	def get(self, key, default=None):
 		"""
 		Returns GET and POST params. Multiple values are returned as lists.
 
@@ -101,24 +103,24 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 		# Zope does this by actually processing the inputs
 		# into a "form" object
 
-		def _d_o_l( o ):
-			return o.dict_of_lists() if hasattr( o, 'dict_of_lists' ) else o.copy() # DummyRequest GET/POST are different
-		dict_of_lists = _d_o_l( self.GET )
-		dict_of_lists.update( _d_o_l( self.POST ) )
-		val = dict_of_lists.get( key )
+		def _d_o_l(o):
+			return o.dict_of_lists() if hasattr(o, 'dict_of_lists') else o.copy()  # DummyRequest GET/POST are different
+		dict_of_lists = _d_o_l(self.GET)
+		dict_of_lists.update(_d_o_l(self.POST))
+		val = dict_of_lists.get(key)
 		if val:
 			if len(val) == 1:
-				val = val[0] # de-list things that only appeared once
+				val = val[0]  # de-list things that only appeared once
 		else:
 			# Ok, in the environment?
-			val = self.environ.get( key, default )
+			val = self.environ.get(key, default)
 		return val
 
 	def items(self):
 		result = {}
-		result.update( self.environ )
-		result.update( self.GET )
-		result.update( self.POST )
+		result.update(self.environ)
+		result.update(self.GET)
+		result.update(self.POST)
 		return result.items()
 
 	def keys(self):
@@ -143,7 +145,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 		return result
 
 	def getHeader(self, name, default=None):
-		return self.headers.get( name, default )
+		return self.headers.get(name, default)
 
 	def getURL(self):
 		return self.path_url
@@ -152,17 +154,17 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 	def locale(self):
 		try:
 			# Country is optional
-			lang_country = get_locale_name( self ).split( '-' )
-		except AttributeError: # Testing, registry has no settings
+			lang_country = get_locale_name(self).split('-')
+		except AttributeError:  # Testing, registry has no settings
 			lang_country = ('en', 'US')
-		return locales.getLocale( *lang_country )
+		return locales.getLocale(*lang_country)
 
 	@property
 	def annotations(self):
-		return getProxiedObject(self).__dict__.setdefault( 'annotations', {} )
+		return getProxiedObject(self).__dict__.setdefault('annotations', {})
 
 	def _get__annotations__(self):
-		return getProxiedObject(self).__dict__.get( '__annotations__' )
+		return getProxiedObject(self).__dict__.get('__annotations__')
 	def _set__annotations__(self, val):
 		getProxiedObject(self).__dict__['__annotations__'] = val
 	__annotations__ = property(_get__annotations__, _set__annotations__)
@@ -173,7 +175,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 	def bodyStream(self):
 		return self.body_file_seekable
 
-	def _unimplemented(self,*args,**kwargs):
+	def _unimplemented(self, *args, **kwargs):
 		raise NotImplementedError()
 	@property
 	def _unimplemented_prop(self):
@@ -203,7 +205,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 	def principal(self):
 		try:
 			return getInteraction().participations[0].principal
-		except (NoInteraction,IndexError,AttributeError):
+		except (NoInteraction, IndexError, AttributeError):
 			return component.queryUtility(IUnauthenticatedPrincipal)
 
 	@property
