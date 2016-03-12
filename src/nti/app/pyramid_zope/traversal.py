@@ -11,28 +11,35 @@ __docformat__ = "restructuredtext en"
 logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
+
 from zope.event import notify
 
 from zope.location.interfaces import LocationError
 
 from zope.traversing import api as ztraversing
-from zope.traversing.interfaces import BeforeTraverseEvent, ITraversable
+from zope.traversing.interfaces import ITraversable
+from zope.traversing.interfaces import BeforeTraverseEvent
 
-import pyramid.interfaces
 from pyramid import traversal
-from pyramid.interfaces import VH_ROOT_KEY
+
+from pyramid.compat import is_nonstr_iter
+from pyramid.compat import decode_path_info
+
 from pyramid.exceptions import URLDecodeError
+
 from pyramid.httpexceptions import HTTPNotFound
-from pyramid.compat import is_nonstr_iter, decode_path_info
+
+from pyramid.interfaces import VH_ROOT_KEY
+from pyramid.interfaces import ITraverser
 
 lineage = traversal.lineage
 find_interface = traversal.find_interface
 
 from zope.deferredimport import deprecatedFrom
-deprecatedFrom( "Prefer nti.traversal.traversal",
-				"nti.traversal.traversal",
-				"resource_path", 
-				"normal_resource_path" )
+deprecatedFrom("Prefer nti.traversal.traversal",
+			   "nti.traversal.traversal",
+			   "resource_path",
+				"normal_resource_path")
 
 empty = traversal.empty
 split_path_info = traversal.split_path_info
@@ -49,13 +56,13 @@ def _notify_before_traverse_event(ob, request):
 	safe.
 	"""
 	try:
-		notify( BeforeTraverseEvent( ob, request ) )
+		notify(BeforeTraverseEvent(ob, request))
 	except LocationError:
 		# this is often a setup or programmer error
 		logger.debug("LocationError from traverse subscribers", exc_info=True)
 		raise HTTPNotFound("Traversal failed")
 
-@interface.implementer(pyramid.interfaces.ITraverser)
+@interface.implementer(ITraverser)
 class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 	"""
 	A :class:`.ITraverser` based on pyramid's default traverser, but
@@ -78,7 +85,7 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 	"""
 
 	def __init__(self, root):
-		traversal.ResourceTreeTraverser.__init__( self, root )
+		traversal.ResourceTreeTraverser.__init__(self, root)
 
 	def __call__(self, request):
 		# JAM: Unfortunately, the superclass implementation is entirely monolithic
@@ -118,11 +125,11 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 				raise URLDecodeError(e.encoding, e.object, e.start, e.end,
 									 e.reason)
 
-		if VH_ROOT_KEY in environ: # pragma: no cover
+		if VH_ROOT_KEY in environ:  # pragma: no cover
 			# HTTP_X_VHM_ROOT
 			vroot_path = decode_path_info(environ[VH_ROOT_KEY])
 			vroot_tuple = split_path_info(vroot_path)
-			vpath = vroot_path + path # both will (must) be unicode or asciistr
+			vpath = vroot_path + path  # both will (must) be unicode or asciistr
 			vroot_idx = len(vroot_tuple) - 1
 		else:
 			vroot_tuple = ()
@@ -132,14 +139,14 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 		root = self.root
 		ob = vroot = root
 
-		if vpath == b'/': # invariant: vpath must not be empty
+		if vpath == b'/':  # invariant: vpath must not be empty
 			# prevent a call to traversal_path if we know it's going
 			# to return the empty tuple
 			vpath_tuple = ()
 		else:
 			i = 0
 			view_selector = self.VIEW_SELECTOR
-			vpath_tuple = list( split_path_info(vpath) ) # A list so that remaining_path can be modified
+			vpath_tuple = list(split_path_info(vpath))  # A list so that remaining_path can be modified
 			for segment in vpath_tuple:
 				# JAM: Fire traversal events, mainly so sites get installed. See
 				# zope.publisher.base.
@@ -147,7 +154,7 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 				# JAM: Notice that checking for '@@' is special cased, and
 				# doesn't go through the normal namespace lookup as it would in
 				# plain zope traversal.
-				if segment.startswith( view_selector ): # pragma: no cover
+				if segment.startswith(view_selector):  # pragma: no cover
 					return {'context': ob,
 							'view_name': segment[2:],
 							'subpath': vpath_tuple[i + 1:],
@@ -172,22 +179,28 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 					# (In the namespace case, we let traversing handle it, because it needs a named adapter
 					# after parsing)
 					traversable = None
-					if segment and segment[0] not in b'+@' and not ITraversable.providedBy( ob ):
+					if 		segment and segment[0] not in b'+@' \
+						and not ITraversable.providedBy(ob):
 						try:
-							traversable = request.registry.queryMultiAdapter( (ob, request), ITraversable )
+							registry = request.registry
+							traversable = registry.queryMultiAdapter((ob, request),
+																	 ITraversable)
 						except TypeError:
-							# Some things are registered for "*" (DefaultTraversable) which means they get called
-							# here. If they can't take two arguments, then we bail. Sucks.
+							# Some things are registered for "*" (DefaultTraversable) 
+							# which means they get called here. If they can't take
+							# two arguments, then we bail. Sucks.
 							pass
 
-					remaining_path = vpath_tuple[i+1:]
-					next_ob = ztraversing.traversePathElement( ob, segment, remaining_path,
-															   traversable=traversable,
-															   request=request )
-					if remaining_path != vpath_tuple[i+1:]:
+					remaining_path = vpath_tuple[i + 1:]
+					next_ob = ztraversing.traversePathElement(ob, 
+															  segment, 
+															  remaining_path,
+															  traversable=traversable,
+															  request=request)
+					if remaining_path != vpath_tuple[i + 1:]:
 						# Is this if check necessary? It would be faster to
 						# always assign
-						vpath_tuple[i+1:] = remaining_path
+						vpath_tuple[i + 1:] = remaining_path
 				except LocationError:
 					# LocationError is a type of KeyError. The DefaultTraversable turns
 					# plain KeyError and TypeErrors into LocationError.
@@ -198,14 +211,15 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 							'virtual_root': vroot,
 							'virtual_root_path': vroot_tuple,
 							'root': root}
-				if i == vroot_idx: # pragma: no cover
+				if i == vroot_idx:  # pragma: no cover
 					vroot = next_ob
 				ob = next_ob
 				i += 1
 
 		# JAM: Also fire before traversal for the actual context item, since we
-		# won't actually traverse into it. Be sure not to fire multiple times for this (E.g., the root)
-		# This logic is complicated by the multi-returns above.
+		# won't actually traverse into it. Be sure not to fire multiple times 
+		# for this (E.g., the root). This logic is complicated by the
+		# multi-returns above.
 		_notify_before_traverse_event(ob, request)
 
 		return {'context': ob,
