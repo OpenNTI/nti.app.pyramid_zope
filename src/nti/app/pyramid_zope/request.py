@@ -35,7 +35,7 @@ from zope.security.management import getInteraction
 import pyramid.interfaces
 from pyramid.i18n import get_locale_name
 
-from nti.common.property import alias
+from nti.property.property import alias
 
 # Implement the request
 # and the "skin". In zope, the skin is changeable (IBrowserRequest
