@@ -139,7 +139,7 @@ from zope.i18n.interfaces import ITranslationDomain
 
 from pyramid.interfaces import ITranslationDirectories
 
-from nti.common.property import Lazy
+from nti.property.property import Lazy
 
 @interface.implementer(ITranslationDirectories)
 class ZopeTranslationDirectories(object):
