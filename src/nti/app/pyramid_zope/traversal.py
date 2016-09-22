@@ -5,6 +5,7 @@ Support for resource tree traversal.
 
 .. $Id$
 """
+
 from __future__ import print_function, unicode_literals, absolute_import, division
 __docformat__ = "restructuredtext en"
 
@@ -18,6 +19,7 @@ from zope.event import notify
 from zope.location.interfaces import LocationError
 
 from zope.traversing import api as ztraversing
+
 from zope.traversing.interfaces import ITraversable
 from zope.traversing.interfaces import BeforeTraverseEvent
 
@@ -31,6 +33,7 @@ from pyramid.exceptions import URLDecodeError
 from pyramid.httpexceptions import HTTPNotFound
 
 from pyramid.interfaces import VH_ROOT_KEY
+
 from pyramid.interfaces import ITraverser
 
 lineage = traversal.lineage
