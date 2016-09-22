@@ -10,6 +10,7 @@ __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
 
+from zope import component
 from zope import interface
 
 from zope.event import notify
@@ -182,7 +183,10 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
 					if 		segment and segment[0] not in b'+@' \
 						and not ITraversable.providedBy(ob):
 						try:
-							registry = request.registry
+							# use the component registry instead of the request
+							# registry (which may be the global manager) in case
+							# there are site specific traversables
+							registry = component.getSiteManager() # request.registry
 							traversable = registry.queryMultiAdapter((ob, request),
 																	 ITraversable)
 						except TypeError:
