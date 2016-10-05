@@ -39,6 +39,7 @@ setup(
 	install_requires=[
 		'setuptools',
 		'pyramid',
+		'pyramid-chameleon',
 		'z3c.template',
 		'z3c.pt',
 		'z3c.ptcompat',
