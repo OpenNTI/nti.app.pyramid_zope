@@ -35,6 +35,7 @@ setup(
 	namespace_packages=['nti', 'nti.app'],
 	install_requires=[
 		'setuptools',
+		'PyYAML',
 		'pyramid',
 		'pyramid-chameleon',
 		'z3c.template',
