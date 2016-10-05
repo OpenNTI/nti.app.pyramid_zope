@@ -143,21 +143,49 @@ class ZPTTemplateRenderer(object):
 
 import csv
 import sys
-import yaml
 import codecs
 import os.path
 import argparse
 import datetime
 
+import yaml
+
 import simplejson
+
+from chameleon.tal import RepeatDict
+
+from zope.configuration import config
+from zope.configuration import xmlconfig
+
+from zope.dottedname import resolve as dottedname
 
 from zope.i18n import translate as ztranslate
 
 from zope.traversing import api as tapi
 
-from chameleon.tal import RepeatDict
+def _configure(self=None, set_up_packages=(), features=(),
+			   context=None, execute=True):
+	if set_up_packages:
+		if context is None:
+			context = config.ConfigurationMachine()
+			xmlconfig.registerCommonDirectives(context)
+		for feature in features:
+			context.provideFeature(feature)
 
-from nti.dataserver.utils import _configure
+		for i in set_up_packages:
+			__traceback_info__ = (i, self, set_up_packages)
+			if isinstance(i, tuple):
+				filename = i[0]
+				package = i[1]
+			else:
+				filename = 'configure.zcml'
+				package = i
+
+			if isinstance(package, basestring):
+				package = dottedname.resolve(package)
+			context = xmlconfig.file(filename, package=package,
+									 context=context, execute=execute)
+		return context
 
 def main():
 	arg_parser = argparse.ArgumentParser(description="Render a single file with JSON data")

@@ -47,6 +47,8 @@ setup(
 		'zope.authentication',
 		'zope.browserpage',
 		'zope.component',
+		'zope.configuration',
+		'zope.dottedname',
 		'zope.i18n',
 		'zope.interface',
 		'zope.pagetemplate',
