@@ -35,7 +35,6 @@ setup(
 	namespace_packages=['nti', 'nti.app'],
 	install_requires=[
 		'setuptools',
-		'nti.property',
 		'Chameleon',
 		'simplejson',
 		'six',
