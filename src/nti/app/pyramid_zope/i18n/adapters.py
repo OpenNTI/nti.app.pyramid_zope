@@ -14,6 +14,8 @@ logger = __import__('logging').getLogger(__name__)
 from zope import interface
 from zope import component
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.i18n.interfaces import IUserPreferredLanguages
 from zope.i18n.interfaces import IModifiableUserPreferredLanguages
 
@@ -138,8 +140,6 @@ import os
 from zope.i18n.interfaces import ITranslationDomain
 
 from pyramid.interfaces import ITranslationDirectories
-
-from nti.property.property import Lazy
 
 @interface.implementer(ITranslationDirectories)
 class ZopeTranslationDirectories(object):
