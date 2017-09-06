@@ -6,7 +6,7 @@ Support for resource tree traversal.
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -105,14 +105,14 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
         if request.matchdict is not None:
             matchdict = request.matchdict
 
-            path = matchdict.get(b'traverse', b'/') or b'/'
+            path = matchdict.get(   'traverse', '/') or '/'
             if is_nonstr_iter(path):
                 # this is a *traverse stararg (not a {traverse})
                 # routing has already decoded these elements, so we just
                 # need to join them
-                path = b'/'.join(path) or b'/'
+                path = '/'.join(path) or '/'
 
-            subpath = matchdict.get(b'subpath', ())
+            subpath = matchdict.get('subpath', ())
             if not is_nonstr_iter(subpath):  # pragma: no cover
                 # this is not a *subpath stararg (just a {subpath})
                 # routing has already decoded this string, so we just need
@@ -124,9 +124,9 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
             subpath = ()
             try:
                 # empty if mounted under a path in mod_wsgi, for example
-                path = decode_path_info(environ[b'PATH_INFO'] or b'/')
+                path = decode_path_info(environ['PATH_INFO'] or '/')
             except KeyError:
-                path = b'/'
+                path = '/'
             except UnicodeDecodeError as e:
                 raise URLDecodeError(e.encoding, e.object, e.start, e.end,
                                      e.reason)
@@ -146,7 +146,7 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
         root = self.root
         ob = vroot = root
 
-        if vpath == b'/':  # invariant: vpath must not be empty
+        if vpath == '/':  # invariant: vpath must not be empty
             # prevent a call to traversal_path if we know it's going
             # to return the empty tuple
             vpath_tuple = ()
@@ -188,8 +188,8 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
                     # (In the namespace case, we let traversing handle it, because it needs a named adapter
                     # after parsing)
                     traversable = None
-                    if      segment and segment[0] not in b'+@' \
-                        and not ITraversable.providedBy(ob):
+                    if segment and segment[0] not in '+@' \
+                            and not ITraversable.providedBy(ob):
                         try:
                             # use the component registry instead of the request
                             # registry (which may be the global manager) in case
