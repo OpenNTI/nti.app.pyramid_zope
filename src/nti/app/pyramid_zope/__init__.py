@@ -4,7 +4,7 @@
 .. $Id$
 """
 
-from __future__ import print_function, unicode_literals, absolute_import, division
+from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
 logger = __import__('logging').getLogger(__name__)
@@ -27,6 +27,8 @@ from nti.app.pyramid_zope.z3c_zpt import ViewPageTemplateFile
 
 # Best to use a class not a function to avoid changing
 # calling depth
+
+
 class _VPT(ViewPageTemplateFile):
 
 	def __init__(self, filename, _prefix=None, content_type=None):
@@ -38,15 +40,17 @@ class _VPT(ViewPageTemplateFile):
 		# pyramid settings. Can we get to that from here?
 		auto_reload = os.getenv('PYRAMID_RELOAD_TEMPLATES')
 		debug = os.getenv('PYRAMID_DEBUG_TEMPLATES')
-		ViewPageTemplateFile.__init__(self, filename, path=path, content_type=content_type,
+		ViewPageTemplateFile.__init__(self, filename, path=path, 
+									  content_type=content_type,
 									  auto_reload=auto_reload,
 									  debug=debug)
+
 
 if viewlet.ViewPageTemplateFile is viewpagetemplatefile.ViewPageTemplateFile:
 	# TODO: Formalize this
 	logger.debug("Monkey-patching zope.viewlet to use z3c.pt")
-
 	viewlet.ViewPageTemplateFile = _VPT
+
 if template.ViewPageTemplateFile is viewpagetemplatefile.ViewPageTemplateFile:
 	# They claim that including of z3c.ptcompat does this, I'm not
 	# convinced
