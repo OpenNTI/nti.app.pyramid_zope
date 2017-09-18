@@ -6,6 +6,6 @@
 
 	<include package="pyramid_zcml" />
 
-	<pyramid:localenegotiator
-		negotiator=".adapters.preferred_language_locale_negotiator" />
+	<pyramid:localenegotiator negotiator=".adapters.preferred_language_locale_negotiator" />
+
 </configure>
