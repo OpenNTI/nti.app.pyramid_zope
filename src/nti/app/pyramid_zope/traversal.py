@@ -6,22 +6,9 @@ Support for resource tree traversal.
 .. $Id$
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
-
-from zope import component
-from zope import interface
-
-from zope.event import notify
-
-from zope.location.interfaces import LocationError
-
-from zope.traversing import api as ztraversing
-
-from zope.traversing.interfaces import ITraversable
-from zope.traversing.interfaces import BeforeTraverseEvent
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
 
 from pyramid import traversal
 
@@ -36,17 +23,32 @@ from pyramid.interfaces import VH_ROOT_KEY
 
 from pyramid.interfaces import ITraverser
 
+from zope import component
+from zope import interface
+
+from zope.event import notify
+
+from zope.location.interfaces import LocationError
+
+from zope.traversing import api as ztraversing
+
+from zope.traversing.interfaces import ITraversable
+from zope.traversing.interfaces import BeforeTraverseEvent
+
 lineage = traversal.lineage
 find_interface = traversal.find_interface
+
+empty = traversal.empty
+split_path_info = traversal.split_path_info
+
+logger = __import__('logging').getLogger(__name__)
+
 
 from zope.deferredimport import deprecatedFrom
 deprecatedFrom("Prefer nti.traversal.traversal",
                "nti.traversal.traversal",
                "resource_path",
                "normal_resource_path")
-
-empty = traversal.empty
-split_path_info = traversal.split_path_info
 
 
 def _notify_before_traverse_event(ob, request):
@@ -174,9 +176,9 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
                 try:
                     # JAM: This is where we differ. instead of using __getitem__,
                     # we use the traversing machinery.
-                    # TODO: The zope app would use IPublishTraverser, which
+                    # The zope app would use IPublishTraverser, which
                     # would install security proxies along the way. We probably don't need to
-                    # do that?
+                    # do that? TODO:
                     # NOTE: By passing the request here, we require all traversers
                     # (including the namespace traversers) to be registered as multi-adapters.
                     # None of the default namespaces are. See our
