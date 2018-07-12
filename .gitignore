@@ -1,0 +1,16 @@
+.noseids
+.settings
+.project
+.pydevproject
+*.pyc
+*.egg-info
+build
+.settings
+.project
+.pydevproject
+*.pyc
+!.coveragerc
+.coverage
+.tox
+dist
+setuptools_git-1.0-py2.7.egg
