@@ -199,7 +199,7 @@ def _configure(self=None, set_up_packages=(), features=(),
 def main():
     arg_parser = argparse.ArgumentParser(description="Render a single file with JSON data")
     arg_parser.add_argument('input', help="The input template")
-    arg_parser.add_argument('output', 
+    arg_parser.add_argument('output',
 							help="The output filename, or - for standard out.")
     arg_parser.add_argument('--data',
                             dest='data',
@@ -346,7 +346,7 @@ def main():
             output_specific = None
             if args.repeat_filename:
                 try:
-                    output_specific = tapi.traverse(raw_val, 
+                    output_specific = tapi.traverse(raw_val,
 													args.repeat_filename)
                     output_specific = output_specific.strip()
                     output_specific = output_specific.lower().replace(' ', '_')

@@ -93,7 +93,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 
         base.response.getStatus = lambda: base.response.status_code
         base.response.setStatus = lambda status_code: setattr(base.response,
-                                                              'status_code', 
+                                                              'status_code',
                                                               status_code)
 
     @non_overridable

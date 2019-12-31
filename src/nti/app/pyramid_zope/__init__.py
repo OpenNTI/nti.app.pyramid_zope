@@ -40,7 +40,7 @@ class _VPT(ViewPageTemplateFile):
 		# pyramid settings. Can we get to that from here?
 		auto_reload = os.getenv('PYRAMID_RELOAD_TEMPLATES')
 		debug = os.getenv('PYRAMID_DEBUG_TEMPLATES')
-		ViewPageTemplateFile.__init__(self, filename, path=path, 
+		ViewPageTemplateFile.__init__(self, filename, path=path,
 									  content_type=content_type,
 									  auto_reload=auto_reload,
 									  debug=debug)
