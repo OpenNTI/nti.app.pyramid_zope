@@ -11,7 +11,6 @@ entry_points = {
 }
 
 TESTS_REQUIRE = [
-    'nti.app.testing',
     'nti.testing',
     'zope.testrunner',
 ]
@@ -50,6 +49,7 @@ setup(
     tests_require=TESTS_REQUIRE,
     install_requires=[
         'setuptools',
+        'nti.property',
         'Chameleon',
         'simplejson',
         'six',
