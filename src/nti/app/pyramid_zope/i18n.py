@@ -3,14 +3,11 @@
 """
 Support for language and charset negotiation for
 pyramid requests.
-
-.. $Id$
 """
 
 from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 from zope import interface
@@ -42,5 +39,5 @@ def PyramidBrowserPreferredLanguages(request):
 def PyramidBrowserPreferredCharsets(request):
     # Unfortunately, the trick we use for UserPreferredLanguages does
     # not work here
-    from zope.publisher.http import HTTPCharsets
+    from zope.publisher.http import HTTPCharsets # pylint:disable=bad-option-value,import-outside-toplevel
     return HTTPCharsets(PyramidZopeRequestProxy(request))
