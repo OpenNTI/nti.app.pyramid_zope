@@ -5,14 +5,11 @@ Partial support for making a Pyramid request/response object pair work more
 like a Zope request.
 
 Partially based on ideas from :mod:`pyramid_zope_request`
-
-.. $Id$
 """
 
 from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-logger = __import__('logging').getLogger(__name__)
 
 from zope import component
 from zope import interface
@@ -26,12 +23,13 @@ from zope.proxy import getProxiedObject
 
 from zope.proxy.decorator import SpecificationDecoratorBase
 
-# import zope.publisher.browser
+
 import zope.publisher.interfaces.browser
 
 from zope.security.interfaces import NoInteraction
 from zope.security.management import getInteraction
 
+from six import text_type
 from pyramid.interfaces import IRequest
 from pyramid.i18n import get_locale_name
 
@@ -67,7 +65,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
     """
 
     def __init__(self, base):
-        SpecificationDecoratorBase.__init__(self, base)
+        super(PyramidZopeRequestProxy, self).__init__(base)
         if getattr(base, 'registry', None) is None:
             base.registry = component.getSiteManager()
 
@@ -77,7 +75,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
             __traceback_info__ = name, value, literal
             # Go to bytes for python 2 if incoming was a string
             name = str(name)
-            value = str(value) if isinstance(value, unicode) else value
+            value = str(value) if isinstance(value, text_type) else value
             if name.lower() == 'content-type':
                 # work around that webob stores the charset
                 # in the header ``Content-type``, zope kills the charset
@@ -93,7 +91,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 
         base.response.getStatus = lambda: base.response.status_code
         base.response.setStatus = lambda status_code: setattr(base.response,
-                                                              'status_code', 
+                                                              'status_code',
                                                               status_code)
 
     @non_overridable
@@ -174,7 +172,16 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 
     def _set__annotations__(self, val):
         getProxiedObject(self).__dict__['__annotations__'] = val
-    __annotations__ = property(_get__annotations__, _set__annotations__)
+    __annotations__ = property( # pylint:disable=bad-option-value,property-on-old-class
+        # On python 2, pylint thinks this is an old-style
+        # class, for some reason, and complains here. But not about
+        # the call to super() in the constructor.
+        # Python 3, of course has no old-style classes so it doesn't have that
+        # warning
+        _get__annotations__,
+        _set__annotations__
+    )
+
 
     environment = alias('environ')
 

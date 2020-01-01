@@ -3,14 +3,10 @@
 """
 Pyramid template renderer using z3c.pt, for the path syntax
 and other niceties that Chameleon itself doesn't support
-
-.. $Id$
 """
 
 from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
 
 from zope import interface
 
@@ -21,6 +17,7 @@ import z3c.pt.pagetemplate
 from pyramid.decorator import reify
 
 from pyramid_chameleon.renderer import template_renderer_factory
+from chameleon.zpt.template import PageTemplateFile
 
 # ITemplateRenderer is deprecated as of pyramid 1.5a3,
 # but there is no corresponding pyramid_chameleon
@@ -33,8 +30,9 @@ try:
 except KeyError:
     raise ImportError()
 
-from chameleon.zpt.template import PageTemplateFile
 
+
+logger = __import__('logging').getLogger(__name__)
 
 def renderer_factory(info):
     """
@@ -66,7 +64,7 @@ class _ViewPageTemplateFileWithLoad(z3c.pt.pagetemplate.ViewPageTemplateFile):
         # # We try to get iteration order fixed here:
         # result = OrderedDict()
         # for k in sorted(d.keys()):
-        # 	result[k] = d[k]
+        #   result[k] = d[k]
         # return result
         return d
 
@@ -141,12 +139,13 @@ class ZPTTemplateRenderer(object):
             # template they wanted. We can do something similar though
             # traversal, we just need to update our templates.)
             # FIXME: Note use of nti.appserver package
-        # 	master = get_renderer('nti.appserver:templates/master_email.pt').implementation()
-        # 	system['master'] = master
+        #   master = get_renderer('nti.appserver:templates/master_email.pt').implementation()
+        #   system['master'] = master
         result = self.template.bind(view)(**system)
         return result
 
-
+# pylint:disable=wrong-import-position,wrong-import-order
+# XXX: Why are these down there?
 import csv
 import six
 import sys
@@ -193,14 +192,14 @@ def _configure(self=None, set_up_packages=(), features=(),
                 package = dottedname.resolve(package)
             context = xmlconfig.file(filename, package=package,
                                      context=context, execute=execute)
-        return context
+    return context
 
 
-def main():
+def main(): # pylint:disable=too-many-locals,too-many-statements
     arg_parser = argparse.ArgumentParser(description="Render a single file with JSON data")
     arg_parser.add_argument('input', help="The input template")
-    arg_parser.add_argument('output', 
-							help="The output filename, or - for standard out.")
+    arg_parser.add_argument('output',
+                            help="The output filename, or - for standard out.")
     arg_parser.add_argument('--data',
                             dest='data',
                             help="The path to a filename to read to get the data for template options.\n"
@@ -215,8 +214,7 @@ def main():
     arg_parser.add_argument('--repeat-on-sequence-name',
                             dest='repeat_on_sequence_name',
                             help="If given along with --repeat-on, this name will be bound in"
-                            "the options dictionary as the sequence that --repeat-on is iterating"
-                            )
+                            "the options dictionary as the sequence that --repeat-on is iterating")
     arg_parser.add_argument('--repeat-on-name',
                             dest='repeat_on_name',
                             help="The name of the element being iterated. REQUIRED if --repeat-on is given")
@@ -346,8 +344,8 @@ def main():
             output_specific = None
             if args.repeat_filename:
                 try:
-                    output_specific = tapi.traverse(raw_val, 
-													args.repeat_filename)
+                    output_specific = tapi.traverse(raw_val,
+                                                    args.repeat_filename)
                     output_specific = output_specific.strip()
                     output_specific = output_specific.lower().replace(' ', '_')
                     output_specific = output_specific.replace(os.path.sep, '_')
