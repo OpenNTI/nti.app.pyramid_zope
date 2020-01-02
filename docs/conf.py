@@ -356,6 +356,8 @@ texinfo_documents = [
 intersphinx_mapping = {
     'https://docs.python.org/': None,
     'https://pyramid.readthedocs.io/en/latest/': None,
+    'https://zopetraversing.readthedocs.io/en/latest/': None,
+    'https://zopesite.readthedocs.io/en/latest/': None,
 }
 
 extlinks = {'issue': ('https://github.com/NextThought/nti.app.pyramid_zope/issues/%s',

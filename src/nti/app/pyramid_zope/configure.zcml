@@ -14,4 +14,90 @@
 	<adapter factory=".request.PyramidZopeRequestProxy"
 			 provides="zope.publisher.interfaces.browser.IBrowserRequest" />
 
+	<!-- Object graph traversal -->
+	<!--
+	The default traversable is registered by zope.traversing for no
+	request and zope's request. Here we register it for the pyramid request;
+	we do the same with some other things that zope.traversing provides.
+	Note in general that it is necessary to register adapters for both
+	no request and with a request.
+	-->
+
+	<adapter for="* pyramid.interfaces.IRequest"
+			 factory="zope.traversing.adapters.DefaultTraversable"
+			 provides="zope.traversing.interfaces.ITraversable" />
+
+	<adapter name="adapter"
+			 for="* pyramid.interfaces.IRequest"
+			 factory="nti.traversal.traversal.adapter_request"
+			 provides="zope.traversing.interfaces.ITraversable" />
+
+	<!-- Resources -->
+	<adapter name="resource"
+			 for="* pyramid.interfaces.IRequest"
+			 provides="zope.traversing.interfaces.ITraversable"
+			 factory=".traversal.resource" />
+
+	<adapter
+		name="etc"
+		for="* pyramid.interfaces.IRequest"
+		provides="zope.traversing.interfaces.ITraversable"
+		factory="zope.traversing.namespace.etc"
+		/>
+	<!--
+        ``attribute`` is potentially dangerous since we don't
+        security proxy (?). So we don't register a
+        namespace adapter for it.
+    -->
+	<!--
+	<adapter
+		name="attribute"
+		for="* pyramid.interfaces.IRequest"
+		provides="zope.traversing.interfaces.ITraversable"
+		factory="zope.traversing.namespace.attr"
+		/>
+	-->
+	<adapter
+		name="item"
+		for="* pyramid.interfaces.IRequest"
+		provides="zope.traversing.interfaces.ITraversable"
+		factory="zope.traversing.namespace.item"
+		/>
+
+	<adapter
+		name="acquire"
+		for="* pyramid.interfaces.IRequest"
+		provides="zope.traversing.interfaces.ITraversable"
+		factory="zope.traversing.namespace.acquire"
+		/>
+
+	<adapter
+		name="view"
+		for="* pyramid.interfaces.IRequest"
+		provides="zope.traversing.interfaces.ITraversable"
+		factory="zope.traversing.namespace.view"
+		/>
+
+	<!-- These last three might not make much sense? -->
+	<adapter
+		name="lang"
+		for="* pyramid.interfaces.IRequest"
+		provides="zope.traversing.interfaces.ITraversable"
+		factory="zope.traversing.namespace.lang"
+		/>
+
+	<adapter
+		name="skin"
+		for="* pyramid.interfaces.IRequest"
+		provides="zope.traversing.interfaces.ITraversable"
+		factory="zope.traversing.namespace.skin"
+		/>
+
+	<adapter
+		name="vh"
+		for="* pyramid.interfaces.IRequest"
+		provides="zope.traversing.interfaces.ITraversable"
+		factory="zope.traversing.namespace.vh"
+		/>
+
 </configure>

@@ -18,6 +18,12 @@ nti.app.pyramid_zope.request
 .. automodule:: nti.app.pyramid_zope.request
     :members:
 
+nti.app.pyramid_zope.traversal
+==============================
+.. automodule:: nti.app.pyramid_zope.traversal
+    :members:
+    :special-members:
+
 
 Indices and tables
 ==================

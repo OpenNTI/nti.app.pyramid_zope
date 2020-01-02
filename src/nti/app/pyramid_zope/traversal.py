@@ -3,7 +3,6 @@
 """
 Support for resource tree traversal.
 
-.. $Id$
 """
 
 from __future__ import division
@@ -23,9 +22,9 @@ from pyramid.interfaces import VH_ROOT_KEY
 
 from pyramid.interfaces import ITraverser
 
-from zope import component
 from zope import interface
 
+from zope.component import queryMultiAdapter
 from zope.event import notify
 
 from zope.location.interfaces import LocationError
@@ -35,6 +34,11 @@ from zope.traversing import api as ztraversing
 from zope.traversing.interfaces import ITraversable
 from zope.traversing.interfaces import BeforeTraverseEvent
 
+from zope.publisher.interfaces.browser import IBrowserRequest
+from zope.publisher.interfaces.browser import IDefaultBrowserLayer
+
+from zope.traversing.namespace import resource as _zresource
+
 lineage = traversal.lineage
 find_interface = traversal.find_interface
 
@@ -43,13 +47,10 @@ split_path_info = traversal.split_path_info
 
 logger = __import__('logging').getLogger(__name__)
 
-
-from zope.deferredimport import deprecatedFrom
-deprecatedFrom("Prefer nti.traversal.traversal",
-               "nti.traversal.traversal",
-               "resource_path",
-               "normal_resource_path")
-
+__all__ = [
+    'ZopeResourceTreeTraverser',
+    'resource',
+]
 
 def _notify_before_traverse_event(ob, request):
     """
@@ -73,33 +74,35 @@ def _notify_before_traverse_event(ob, request):
 @interface.implementer(ITraverser)
 class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
     """
-    A :class:`.ITraverser` based on pyramid's default traverser, but
-    modified to use the :mod:`zope.traversing` machinery instead of
-    (only) dictionary lookups. This provides is with the flexibility
-    of the :class:`~zope.traversing.interfaces.ITraversable` adapter
-    pattern, plus the support of namespace lookups
-    (:func:`~zope.traversing.namespace.nsParse` and
-    :func:`~zope.traversing.namespace.namespaceLookup`)
+    A :class:`pyramid.interfaces.ITraverser` based on pyramid's
+    default traverser, but modified to use the
+    :mod:`zope.traversing.api` machinery instead of (only) dictionary
+    lookups. This provides is with the flexibility of the
+    :obj:`zope.traversing.interfaces.ITraversable` adapter pattern,
+    plus the support of namespace lookups
+    (:func:`zope.traversing.namespace.nsParse` and
+    :func:`zope.traversing.namespace.namespaceLookup`).
 
-    As this object traverses, it fires :class:`~.IBeforeTraverseEvent`
+    As this object traverses, it fires :obj:`~.IBeforeTraverseEvent`
     events. If you either load the configuration from
     :mod:`zope.app.publication` or manually enable the
-    :func:`~zope.site.site.threadSiteSubscriber` to subscribe to this
-    event, then any Zope site managers found along the way will be
-    made the current site.
-
-    .. warning :: Enabling that subscriber is not currently supported, as it
-            messes with the site components; see :mod:`nti.appserver.tweens.zope_site_tween`.
+    :obj:`zope.site.site.threadSiteSubscriber <zope.site.site>` to
+    subscribe to this event, then any Zope site managers found along
+    the way will be made the current site.
     """
 
     def __init__(self, root):
         traversal.ResourceTreeTraverser.__init__(self, root)
 
-    def __call__(self, request):
+    def __call__(self, request): # pylint:disable=too-many-locals,too-many-branches,too-many-statements
+        """
+        See :meth:`pyramid.interfaces.ITraversar.__call__`.
+        """
         # JAM: Unfortunately, the superclass implementation is entirely monolithic
         # and we so we cannot reuse any part of it. Instead,
         # we copy-and-paste it. Unless otherwise noted, comments below are
         # original.
+
         # JAM: Note the abundance of no covers. These are for features we are
         # not currently using and the code is lifted directly from pyramid.
         environ = request.environ
@@ -107,7 +110,7 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
         if request.matchdict is not None:
             matchdict = request.matchdict
 
-            path = matchdict.get(   'traverse', '/') or '/'
+            path = matchdict.get('traverse', '/') or '/'
             if is_nonstr_iter(path):
                 # this is a *traverse stararg (not a {traverse})
                 # routing has already decoded these elements, so we just
@@ -163,7 +166,7 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
                 _notify_before_traverse_event(ob, request)
                 # JAM: Notice that checking for '@@' is special cased, and
                 # doesn't go through the normal namespace lookup as it would in
-                # plain zope traversal.
+                # plain zope traversal. (XXX: Why not?)
                 if segment.startswith(view_selector):  # pragma: no cover
                     return {'context': ob,
                             'view_name': segment[2:],
@@ -193,12 +196,18 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
                     if segment and segment[0] not in '+@' \
                             and not ITraversable.providedBy(ob):
                         try:
-                            # use the component registry instead of the request
-                            # registry (which may be the global manager) in case
-                            # there are site specific traversables
-                            registry = component.getSiteManager()  # request.registry
-                            traversable = registry.queryMultiAdapter((ob, request),
-                                                                     ITraversable)
+                            # Use the installed component registry
+                            # instead of the request registry (which
+                            # is the global component registry if
+                            # pyramid was configured that way, or a
+                            # standalone registry) in case the act of
+                            # traversing has changed the site manager;
+                            # zope.site.site.threadSiteSubscriber will
+                            # do this for each BeforeTraverseEvent
+                            # that's fired (though that's not
+                            # registered by default).
+                            traversable = queryMultiAdapter((ob, request),
+                                                            ITraversable)
                         except TypeError:
                             # Some things are registered for "*" (DefaultTraversable)
                             # which means they get called here. If they can't take
@@ -243,3 +252,19 @@ class ZopeResourceTreeTraverser(traversal.ResourceTreeTraverser):
                 'virtual_root': vroot,
                 'virtual_root_path': vroot_tuple,
                 'root': root}
+
+
+
+class resource(_zresource):
+    """
+    Handles resource lookup in a way compatible with :mod:`zope.browserresource`.
+    This package registers resources as named adapters from :class:`.IDefaultBrowserLayer`
+    to Interface. We connect the two by making the pyramid request implement
+    the right thing.
+    """
+
+    def __init__(self, context, request):
+        request = IBrowserRequest(request)
+        if not IDefaultBrowserLayer.providedBy(request):
+            interface.alsoProvides(request, IDefaultBrowserLayer)  # We lie
+        super(resource, self).__init__(context, request)
