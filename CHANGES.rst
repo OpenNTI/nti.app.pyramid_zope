@@ -3,7 +3,7 @@
 =========
 
 
-0.0.2 (unreleased)
+0.0.2 (2020-01-02)
 ==================
 
 - Add ``nti.app.pyramid_zope.traversal.ZopeResourceTreeTraverser``, a
