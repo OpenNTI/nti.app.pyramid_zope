@@ -18,6 +18,7 @@ recursive-include docs *.rst
 recursive-include docs *.txt
 recursive-include docs Makefile
 recursive-exclude docs changelog.rst
+prune docs/_build
 
 recursive-include src *.zcml
 recursive-include src *.pot
