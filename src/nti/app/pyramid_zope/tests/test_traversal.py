@@ -16,9 +16,7 @@ from hamcrest import assert_that
 from hamcrest import has_entries
 from hamcrest import is_
 
-from nti.testing.layers import ConfiguringLayerMixin
-from nti.testing.layers import ZopeComponentLayer
-
+from . import ConfiguringLayer
 from .. import traversal
 
 class TestTraversal(unittest.TestCase):
@@ -59,19 +57,6 @@ class TestTraversal(unittest.TestCase):
             context=is_(BrokenTraversable),
             root=is_(Root),
         ))
-
-
-class ConfiguringLayer(ZopeComponentLayer,
-                       ConfiguringLayerMixin):
-
-    set_up_packages = ('nti.app.pyramid_zope',)
-
-    @classmethod
-    def setUp(cls):
-        "Does nothing"
-
-    tearDown = testSetUp = testTearDown = setUp
-
 
 class TestConfiguration(unittest.TestCase):
 

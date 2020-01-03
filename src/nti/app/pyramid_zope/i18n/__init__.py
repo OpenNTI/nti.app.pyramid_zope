@@ -38,7 +38,7 @@ The complexity comes in combining all of these policies. Almost all
 uses of the translation functions pass the current request as the
 context, and by default that's just going to use the
 ``Accept-Language`` based picker. Our solution is to define a new
-interface :class:`nti.app.i18n.interfaces.IPreferredLanguagesRequest`,
+interface :class:`nti.app.pyramid_zope.i18n.interfaces.IPreferredLanguagesRequest`,
 deriving from :class:`pyramid.interfaces.IRequest` and register a
 policy for that interface. When the
 :class:`pyramid.interfaces.IContextFound` event is fired, if the
@@ -56,11 +56,13 @@ of directories containing translations. We implement Pyramid's
 based on the information we gather from Zope. In this way, the Pyramid
 Chameleon support, for example, uses the same information as other places.
 
+.. important::
 
-.. $Id$
+   Make sure and include ``<include package="nti.app.pyramid_zope.i18n" file="pyramid.zcml" />``
+   from your root ``pyramid.zcml`` to register the negotiator.
+
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
-
-logger = __import__('logging').getLogger(__name__)
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function

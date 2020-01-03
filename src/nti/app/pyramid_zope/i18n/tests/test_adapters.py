@@ -1,45 +1,44 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-# disable: accessing protected members, too many methods
-# pylint: disable=W0212,R0904
+import os
+import unittest
 
-from hamcrest import is_
+import fudge
 from hamcrest import assert_that
+from hamcrest import has_item
+from hamcrest import is_
 from hamcrest import is_not as does_not
 
 from nti.testing.matchers import is_empty
 from nti.testing.matchers import provides
 
-import fudge
-
-from zope import interface
-
-from zope.event import notify
-
-from zope.i18n.interfaces import IUserPreferredLanguages
-
 from pyramid.events import ContextFound
-
+from pyramid.interfaces import ITranslationDirectories
 from pyramid.request import Request
 
-from nti.app.i18n.adapters import preferred_language_locale_negotiator
+from zope import component
+from zope import interface
+from zope.event import notify
+from zope.i18n.interfaces import IUserPreferredLanguages
 
-from nti.app.i18n.interfaces import IPreferredLanguagesRequest
+from ..adapters import preferred_language_locale_negotiator
+from ..interfaces import IPreferredLanguagesRequest
 
-from nti.dataserver.interfaces import IUser
-
-from nti.app.testing.application_webtest import ApplicationLayerTest
-
+from ...tests import ConfiguringLayer
 
 def adjust(request):
     notify(ContextFound(request))
 
 
-class TestApplicationRequestPolicy(ApplicationLayerTest):
+class TestApplicationRequestPolicy(unittest.TestCase):
+    # pylint:disable=too-many-function-args
+
+    layer = ConfiguringLayer
 
     request = None
 
@@ -47,7 +46,8 @@ class TestApplicationRequestPolicy(ApplicationLayerTest):
         self.request = Request.blank('/')
 
     def _langs(self):
-        return IUserPreferredLanguages(self.request).getPreferredLanguages()
+        langs = IUserPreferredLanguages(self.request)
+        return langs.getPreferredLanguages()
 
     def _locale(self):
         return preferred_language_locale_negotiator(self.request)
@@ -72,8 +72,8 @@ class TestApplicationRequestPolicy(ApplicationLayerTest):
         assert_that(self._langs(), is_(['ru']))
         assert_that(self._locale(), is_('ru'))
 
-    @fudge.patch('nti.app.i18n.subscribers.get_remote_user',
-                 'nti.app.i18n.adapters.get_remote_user')
+    @fudge.patch('nti.app.pyramid_zope.i18n.subscribers.IPrincipal',
+                 'nti.app.pyramid_zope.i18n.adapters.IPrincipal')
     def test_adjust_remote_user(self, fake_get1, fake_get2):
         @interface.implementer(IUserPreferredLanguages)
         class User(object):
@@ -87,10 +87,10 @@ class TestApplicationRequestPolicy(ApplicationLayerTest):
         assert_that(self._langs(), is_(['ru']))
         assert_that(self._locale(), is_('ru'))
 
-    @fudge.patch('nti.app.i18n.subscribers.get_remote_user',
-                 'nti.app.i18n.adapters.get_remote_user')
+    @fudge.patch('nti.app.pyramid_zope.i18n.subscribers.IPrincipal',
+                 'nti.app.pyramid_zope.i18n.adapters.IPrincipal')
     def test_adjust_remote_user_default_en(self, fake_get1, fake_get2):
-        @interface.implementer(IUser)
+        #@interface.implementer(IUser)
         class User(object):
             pass
 
@@ -104,10 +104,10 @@ class TestApplicationRequestPolicy(ApplicationLayerTest):
         assert_that(self._langs(), is_([]))
         assert_that(self._locale(), is_('en'))
 
-    @fudge.patch('nti.app.i18n.subscribers.get_remote_user',
-                 'nti.app.i18n.adapters.get_remote_user')
+    @fudge.patch('nti.app.pyramid_zope.i18n.subscribers.IPrincipal',
+                 'nti.app.pyramid_zope.i18n.adapters.IPrincipal')
     def test_adjust_remote_user_default_ru(self, fake_get1, fake_get2):
-        @interface.implementer(IUser)
+        #@interface.implementer(IUser)
         class User(object):
             pass
 
@@ -122,19 +122,36 @@ class TestApplicationRequestPolicy(ApplicationLayerTest):
         assert_that(self._locale(), is_('ru'))
 
 
-from hamcrest import has_item
 
-import os
+class TestApplicationTranslationDirs(unittest.TestCase):
+    layer = ConfiguringLayer
 
-from zope import component
+    @fudge.patch('nti.app.pyramid_zope.i18n.adapters.component.getAllUtilitiesRegisteredFor')
+    def test_translation_dirs(self, get_all):
+        class Domain(object):
+            def __iter__(self):
+                return iter([CatInfo()])
 
-from pyramid.interfaces import ITranslationDirectories
+        class CatInfo(object):
 
+            def getCatalogsInfo(self):
+                return {
+                    # These tests only work on POSIX.
+                    'en': ['/nti/appserver/locales/en/LC_MESSAGES/z3c.password.mo'],
+                    # Entries with more than one are ignored
+                    'ru': [
+                        'abc',
+                        'def',
+                    ],
+                    # Entries that don't end in .mo are ignored
+                    'es': [
+                        'foo.pot'
+                    ],
+                }
 
-class TestApplicationTranslationDirs(ApplicationLayerTest):
-
-    def test_translation_dirs(self):
-        import nti.appserver
+        get_all.is_callable().returns(Domain())
         dirs = component.getUtility(ITranslationDirectories)
-        assert_that(dirs, has_item(os.path.join(os.path.dirname(nti.appserver.__file__),
-                                                'locales')))
+
+        self.assertEqual(
+            list(dirs),
+            ['/nti/appserver/locales'])

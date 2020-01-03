@@ -1,0 +1,21 @@
+======================
+ Internationalization
+======================
+
+
+
+nti.app.pyramid_zope.i18n
+=========================
+.. automodule:: nti.app.pyramid_zope.i18n
+    :members:
+
+nti.app.pyramid_zope.i18n.adapters
+==================================
+.. automodule:: nti.app.pyramid_zope.i18n.adapters
+    :members:
+
+
+nti.app.pyramid_zope.i18n.subscribers
+=====================================
+.. automodule:: nti.app.pyramid_zope.i18n.subscribers
+    :members:

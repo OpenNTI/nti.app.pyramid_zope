@@ -6,8 +6,14 @@
 0.0.3 (unreleased)
 ==================
 
-- Nothing changed yet.
+- Require ``zope.principalregistry`` and configure it from
+  ``configure.zcml``. This packge needs the unauthenticated principal
+  utility it provides.
 
+- Require ``zope.publisher`` and configure it from ``configure.zcml``.
+  This is needed for language negotiation based on requests.
+
+- Add support for I18N.
 
 0.0.2 (2020-01-02)
 ==================

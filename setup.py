@@ -1,5 +1,7 @@
 import codecs
-from setuptools import setup, find_packages
+
+from setuptools import find_packages
+from setuptools import setup
 
 entry_points = {
     'console_scripts': [
@@ -11,6 +13,7 @@ entry_points = {
 }
 
 TESTS_REQUIRE = [
+    'fudge',
     'nti.testing',
     'zope.testrunner',
 ]
@@ -74,6 +77,7 @@ setup(
         'zope.i18n',
         'zope.interface',
         'zope.pagetemplate',
+        'zope.principalregistry',
         'zope.proxy',
         'zope.publisher',
         'zope.security',

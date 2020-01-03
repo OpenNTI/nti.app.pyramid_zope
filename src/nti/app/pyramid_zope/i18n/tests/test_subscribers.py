@@ -1,34 +1,25 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-# disable: accessing protected members, too many methods
-# pylint: disable=W0212,R0904
+import unittest
 
+import fudge
 from hamcrest import assert_that
 from hamcrest import has_property
 from hamcrest import is_not as does_not
 
 from nti.testing.matchers import provides
-
-import fudge
-
-import unittest
-
+from pyramid.events import ContextFound
+from pyramid.request import Request
 from zope import interface
-
 from zope.i18n.interfaces import IUserPreferredLanguages
 
-from pyramid.events import ContextFound
-
-from pyramid.request import Request
-
-from nti.app.i18n.interfaces import IPreferredLanguagesRequest
-
-from nti.app.i18n.subscribers import _adjust_request_interface_for_preferred_languages as _adjust
-
+from ..interfaces import IPreferredLanguagesRequest
+from ..subscribers import adjust_request_interface_for_preferred_languages as _adjust
 
 def adjust(request):
     _adjust(ContextFound(request))
@@ -60,7 +51,7 @@ class TestSubscribers(unittest.TestCase):
         adjust(self.request)
         assert_that(self.request, provides(IPreferredLanguagesRequest))
 
-    @fudge.patch('nti.app.i18n.subscribers.get_remote_user')
+    @fudge.patch('nti.app.pyramid_zope.i18n.subscribers.IPrincipal')
     def test_adjust_remote_user(self, fake_get):
 
         @interface.implementer(IUserPreferredLanguages)
@@ -72,13 +63,3 @@ class TestSubscribers(unittest.TestCase):
 
         adjust(self.request)
         assert_that(self.request, provides(IPreferredLanguagesRequest))
-
-    @fudge.patch('nti.app.i18n.subscribers.get_remote_user')
-    def test_adjust_remote_user_raises(self, fake_get):
-        from nti.dataserver.interfaces import InappropriateSiteError
-
-        fake_get.is_callable().raises(InappropriateSiteError("Outside site"))
-
-        adjust(self.request)
-        assert_that(self.request,
-                    does_not(provides(IPreferredLanguagesRequest)))

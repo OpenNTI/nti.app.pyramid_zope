@@ -1,65 +1,72 @@
-#!/usr/bin/env python
 # -*- coding: utf-8 -*-
 """
 I18N related adapters.
 
-.. $Id$
+
 """
 
-from __future__ import print_function, absolute_import, division
-__docformat__ = "restructuredtext en"
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
 
-logger = __import__('logging').getLogger(__name__)
+import os
+
+import pyramid.interfaces
+
+from pyramid.i18n import default_locale_negotiator
+from pyramid.interfaces import ILocaleNegotiator
+from pyramid.interfaces import ITranslationDirectories
 
 from zope import component
 from zope import interface
 
 from zope.cachedescriptors.property import Lazy
 
-from zope.i18n.interfaces import IUserPreferredLanguages
 from zope.i18n.interfaces import IModifiableUserPreferredLanguages
+from zope.i18n.interfaces import ITranslationDomain
+from zope.i18n.interfaces import IUserPreferredCharsets
+from zope.i18n.interfaces import IUserPreferredLanguages
+from zope.i18n.locales import LoadLocaleError
+from zope.i18n.locales import locales
 
+from zope.publisher.http import HTTPCharsets
 from zope.publisher.interfaces.browser import IBrowserRequest
 
-from pyramid.i18n import default_locale_negotiator
+from zope.security.interfaces import IPrincipal
 
-from nti.app.authentication import get_remote_user
+from .interfaces import IPreferredLanguagesRequest
+from ..request import PyramidZopeRequestProxy
 
-from nti.app.i18n.interfaces import IPreferredLanguagesRequest
+__all__ = [
+    'EnglishUserPreferredLanguages',
+    'PreferredLanguagesPolicy',
+    'PyramidBrowserPreferredCharsets',
+    'PyramidBrowserPreferredLanguages',
+    'preferred_language_locale_negotiator',
+    'ZopeTranslationDirectories',
+]
 
-from nti.dataserver.interfaces import IUser
 
-# The user-based stuff will probably move around when we make it
-# a mutable preference?
-
-
+@component.adapter(None)
 @interface.implementer(IUserPreferredLanguages)
-@component.adapter(IUser)
-class _UserPreferredLanguages(object):
+def EnglishUserPreferredLanguages(unused_user):
     """
-    The preferred languages to use when externalizing for a particular
-    user.
+    An implementation of :class:`.IUserPreferredLanguages` that always returns
+    English.
 
-    .. TODO:: Right now, this is hardcoded to english. We need to store this/derive from request.
+    This is registered as the least-specific
+    adapter for generic objects.
     """
+    return EnglishUserPreferredLanguagesImpl
 
-    def __init__(self, context):
-        pass
 
+@interface.provider(IUserPreferredLanguages)
+class EnglishUserPreferredLanguagesImpl(object):
     PREFERRED_LANGUAGES = ('en',)
 
-    def getPreferredLanguages(self):
-        return self.PREFERRED_LANGUAGES
-
-
-# because this is hardcoded, we can be static for now
-_user_preferred_languages = _UserPreferredLanguages(None)
-
-
-@component.adapter(IUser)
-@interface.implementer(IUserPreferredLanguages)
-def UserPreferredLanguages(unused_user):
-    return _user_preferred_languages
+    @classmethod
+    def getPreferredLanguages(cls):
+        return cls.PREFERRED_LANGUAGES
 
 
 @interface.implementer(IUserPreferredLanguages)
@@ -93,24 +100,35 @@ class PreferredLanguagesPolicy(object):
         # what a default is due to implementation details above. We also
         # know for sure that we *have* a remote use, otherwise we wouldn't
         # be here
-        remote_user = get_remote_user(self.request)
+        remote_user = IPrincipal(self.request, None)
         remote_user_langs = IUserPreferredLanguages(remote_user)
-        remote_user_langs = remote_user_langs.getPreferredLanguages()
-        if remote_user_langs is not _UserPreferredLanguages.PREFERRED_LANGUAGES:
-            return remote_user_langs
+        if remote_user_langs is not EnglishUserPreferredLanguagesImpl:
+            return remote_user_langs.getPreferredLanguages() # pylint:disable=too-many-function-args
 
         # Ok, see what the HTTP request can come up with. Note that we're
         # going to the Zope interface so that we don't get into an infinite
         # loop
         browser_request = IBrowserRequest(self.request)
         browser_langs = IModifiableUserPreferredLanguages(browser_request)
-        return browser_langs.getPreferredLanguages()
+        return browser_langs.getPreferredLanguages() # pylint:disable=too-many-function-args
 
 
-from zope.i18n.locales import locales
-from zope.i18n.locales import LoadLocaleError
+@interface.implementer(IUserPreferredLanguages)
+@component.adapter(pyramid.interfaces.IRequest)
+def PyramidBrowserPreferredLanguages(request):
+    # we implement IUserPreferredLanguages on the Pyramid object, but
+    # return an IModifiableUserPreferredLanguages on the Zope object.
+    # This prevents an infinite loop
+    return IModifiableUserPreferredLanguages(PyramidZopeRequestProxy(request))
 
-from pyramid.interfaces import ILocaleNegotiator
+
+@interface.implementer(IUserPreferredCharsets)
+@component.adapter(pyramid.interfaces.IRequest)
+def PyramidBrowserPreferredCharsets(request):
+    # Unfortunately, the trick we use for UserPreferredLanguages
+    # (through an interface) does not work here and so we have to tightly
+    # couple to an implementation.
+    return HTTPCharsets(PyramidZopeRequestProxy(request))
 
 
 @interface.provider(ILocaleNegotiator)
@@ -122,6 +140,7 @@ def preferred_language_locale_negotiator(request):
     A valid locale is one for which we have available locale data,
     not necessarily one for which any translation data is available.
     """
+    # pylint:disable=too-many-function-args, assignment-from-no-return
 
     # This code is similar to that in zope.publisher.http.HTTPRequest.
     # it's point is to find the most specific available locale possible.
@@ -129,10 +148,11 @@ def preferred_language_locale_negotiator(request):
     # specifically return the english default. We also differ in that we
     # return a locale name instead of a locale object.
 
-    result = _UserPreferredLanguages.PREFERRED_LANGUAGES[0]
+    result = EnglishUserPreferredLanguagesImpl.PREFERRED_LANGUAGES[0]
 
-    pref_langs = IUserPreferredLanguages(request, None)
-    pref_langs = pref_langs.getPreferredLanguages() if pref_langs is not None else ()
+    pref_langs = IUserPreferredLanguages(request, ())
+    if pref_langs:
+        pref_langs = pref_langs.getPreferredLanguages()
 
     for lang in pref_langs:
         parts = (lang.split('-') + [None, None])[:3]
@@ -140,17 +160,10 @@ def preferred_language_locale_negotiator(request):
             locales.getLocale(*parts)
             result = lang
             break
-        except LoadLocaleError:
+        except LoadLocaleError: # pragma: no cover
             continue
 
     return result
-
-
-import os
-
-from zope.i18n.interfaces import ITranslationDomain
-
-from pyramid.interfaces import ITranslationDirectories
 
 
 @interface.implementer(ITranslationDirectories)
@@ -168,7 +181,9 @@ class ZopeTranslationDirectories(object):
     def __iter__(self):
         return iter(self._dirs)
 
-    def __repr__(self):
+    def __repr__(self): # pragma: no cover
+        # TODO: Why is this repr this way? It makes broken test
+        # output very confusing. There are no specific tests for it.
         return repr(list(self))
 
     @Lazy
@@ -186,3 +201,16 @@ class ZopeTranslationDirectories(object):
                     if path not in dirs:
                         dirs.append(path)
         return dirs
+
+    @classmethod
+    def testing_cleanup(cls): # pragma: no cover
+        for d in component.getAllUtilitiesRegisteredFor(ITranslationDirectories):
+            if isinstance(d, ZopeTranslationDirectories):
+                d.__dict__.pop('_dirs', None)
+
+try:
+    from zope.testing import cleanup
+except ImportError: # pragma: no cover
+    pass
+else:
+    cleanup.addCleanUp(ZopeTranslationDirectories.testing_cleanup)
