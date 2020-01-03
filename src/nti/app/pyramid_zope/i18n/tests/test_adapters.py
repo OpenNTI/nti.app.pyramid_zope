@@ -5,12 +5,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import os
 import unittest
 
 import fudge
 from hamcrest import assert_that
-from hamcrest import has_item
 from hamcrest import is_
 from hamcrest import is_not as does_not
 
