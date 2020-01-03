@@ -27,8 +27,8 @@ compatibility shims in :mod:`nti.pyramid_zope.i18n`.
 However, there are cases where we may not want to rely on the browser
 to have the right setting, either for testing, or to support broken
 browsers, or to explicitly enable user preferences. Supporting user
-preferences is easy, an implementation of mutable preferences is
-provided for :class:`.IUser` objects. For temporary testing or for the
+preferences is easy: provide a ``IUserPreferredLanguages`` adapter for your
+``IPrincipal`` implementation. For temporary testing or for the
 use of unauthenticated users, we can also look at the HTTP cookies
 ``_LOCALE_`` (Pyramid's default) and ``I18N_LANGUAGE`` (Zope/Plone
 default), or the _LOCALE_ request parameter (or request attribute);
