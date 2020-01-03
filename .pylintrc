@@ -44,7 +44,8 @@ disable=missing-docstring,
     useless-suppression,
     useless-object-inheritance,
     too-many-ancestors,
-    ungrouped-imports
+    ungrouped-imports,
+    duplicate-code
 #	undefined-all-variable
 
 
