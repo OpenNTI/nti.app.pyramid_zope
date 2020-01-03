@@ -1,0 +1,11 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+			xmlns:i18n="http://namespaces.zope.org/i18n"
+			xmlns:zcml="http://namespaces.zope.org/zcml"
+			xmlns:pyramid="http://pylonshq.com/pyramid">
+
+	<include package="pyramid_zcml" />
+
+	<pyramid:localenegotiator negotiator=".adapters.preferred_language_locale_negotiator" />
+
+</configure>

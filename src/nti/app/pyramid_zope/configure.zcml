@@ -7,12 +7,23 @@
 	<include package="zope.security" file="meta.zcml" />
 	<include package="zope.component" />
 	<include package="zope.security" />
+	<!--
+        Install the default IFallbackUnauthenticatedPrincipal
+        utility.
 
-	<adapter factory=".i18n.PyramidBrowserPreferredCharsets" />
-	<adapter factory=".i18n.PyramidBrowserPreferredLanguages" />
+        This also gives us a default IAuthentication object in the global
+        component manager.
+	-->
+	<include package="zope.principalregistry" />
+
+    <include package=".i18n" />
 
 	<adapter factory=".request.PyramidZopeRequestProxy"
 			 provides="zope.publisher.interfaces.browser.IBrowserRequest" />
+
+    <adapter factory=".security.interaction_from_request" />
+    <adapter factory=".security.principal_from_interaction" />
+    <adapter factory=".security.principal_from_request" />
 
 	<!-- Object graph traversal -->
 	<!--

@@ -1,3 +1,6 @@
+[MASTER]
+load-plugins=pylint.extensions.bad_builtin,pylint.extensions.redefined_variable_type
+
 
 [MESSAGES CONTROL]
 
@@ -41,7 +44,8 @@ disable=missing-docstring,
     useless-suppression,
     useless-object-inheritance,
     too-many-ancestors,
-    ungrouped-imports
+    ungrouped-imports,
+    duplicate-code
 #	undefined-all-variable
 
 
@@ -73,21 +77,19 @@ generated-members=exc_clear
 # greenlet, Greenlet, parent, dead: all attempts to fix issues in greenlet.py
 # only seen on the service, e.g., self.parent.loop: class parent has no loop
 # ignored-classes=SSLContext, SSLSocket, greenlet, Greenlet, parent, dead
+ignored-classes=pyramid.request.Request
 
 # List of module names for which member attributes should not be checked
 # (useful for modules/projects where namespaces are manipulated during runtime
 # and thus existing member attributes cannot be deduced by static analysis. It
 # supports qualified module names, as well as Unix pattern matching.
 # ignored-modules=gevent._corecffi
+ignored-modules=zope.i18n.interfaces
 
 [DESIGN]
 max-attributes=12
 
 [BASIC]
-bad-functions=input
-# Prospector turns ot unsafe-load-any-extension by default, but
-# pylint leaves it off. This is the proximal cause of the
-# undefined-all-variable crash.
 unsafe-load-any-extension = yes
 
 # Local Variables:

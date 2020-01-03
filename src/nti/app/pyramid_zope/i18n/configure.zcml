@@ -1,0 +1,27 @@
+<!-- -*- mode: nxml -*- -->
+<configure	xmlns="http://namespaces.zope.org/zope"
+			xmlns:i18n="http://namespaces.zope.org/i18n"
+			xmlns:zcml="http://namespaces.zope.org/zcml">
+
+	<include package="zope.component" file="meta.zcml" />
+	<include package="zope.security" file="meta.zcml" />
+	<include package="zope.component" />
+	<include package="zope.security" />
+    <!-- IModifiableUserPreferredLanguages for a IHTTPRequest. -->
+    <include package="zope.publisher" />
+
+	<subscriber handler=".subscribers.adjust_request_interface_for_preferred_languages" />
+
+	<!-- Entity preferred languages -->
+	<adapter factory=".adapters.EnglishUserPreferredLanguages" />
+
+	<!-- Special request languages -->
+	<adapter factory=".adapters.PreferredLanguagesPolicy" />
+
+	<!-- Pyramid ITranslationDirectories -->
+	<utility factory=".adapters.ZopeTranslationDirectories" />
+
+	<adapter factory=".adapters.PyramidBrowserPreferredCharsets" />
+	<adapter factory=".adapters.PyramidBrowserPreferredLanguages" />
+
+</configure>

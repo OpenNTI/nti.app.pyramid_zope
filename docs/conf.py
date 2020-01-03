@@ -358,6 +358,8 @@ intersphinx_mapping = {
     'https://pyramid.readthedocs.io/en/latest/': None,
     'https://zopetraversing.readthedocs.io/en/latest/': None,
     'https://zopesite.readthedocs.io/en/latest/': None,
+    'https://zopei18n.readthedocs.io/en/latest/': None,
+    'https://zopesecurity.readthedocs.io/en/latest/': None,
 }
 
 extlinks = {'issue': ('https://github.com/NextThought/nti.app.pyramid_zope/issues/%s',
