@@ -118,7 +118,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
             rv[name] = v
 
         return rv
-        
+
     @non_overridable
     def get(self, key, default=None):
         """

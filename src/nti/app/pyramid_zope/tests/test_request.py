@@ -40,4 +40,3 @@ class TestRequest(SharedConfiguringTestBase):
         zrequest = IBrowserRequest(request)
         assert_that(zrequest.form,
                     {'country': ['Japan', 'Hungary'], 'lastName': 'Doe'})
-        
