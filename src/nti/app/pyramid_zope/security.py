@@ -73,7 +73,7 @@ def principal_from_interaction(interaction):
     Find the primary :class:`IPrincipal` for the *interaction*. The primary
     principal is the principal of the first participation.
     """
-    return next(interaction.participations).principal
+    return next(iter(interaction.participations)).principal
 
 
 @component.adapter(IRequest)
