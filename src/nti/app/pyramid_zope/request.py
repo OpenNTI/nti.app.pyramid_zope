@@ -16,6 +16,8 @@ from zope import interface
 
 from zope.authentication.interfaces import IUnauthenticatedPrincipal
 
+from zope.cachedescriptors.property import Lazy
+
 from zope.i18n.locales import locales
 
 from zope.proxy import non_overridable
@@ -93,6 +95,29 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
         base.response.setStatus = lambda status_code: setattr(base.response,
                                                               'status_code',
                                                               status_code)
+
+    @Lazy
+    def form(self):
+        """
+        Process inputs into the form object.
+
+        See also: https://github.com/zopefoundation/pyramid_zope_request/blob/master/src/pyramid_zope_request/__init__.py#L78
+        """
+        # BrowserRequest processes inputs HEAVILY
+        # we'll process only :list because that's only what we use nowadays
+        # and the code in BrowserRequest isn't really reusable
+        params = self.params
+        rv = {}
+        for k in params.keys():
+            v = params.getall(k)
+            if k.endswith(':list'):
+                name = k[:-5]
+            else:
+                v = v[0]
+                name = k
+            rv[name] = v
+
+        return rv
 
     @non_overridable
     def get(self, key, default=None):

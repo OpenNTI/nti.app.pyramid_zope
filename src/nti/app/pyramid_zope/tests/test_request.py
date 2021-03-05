@@ -29,3 +29,14 @@ class TestRequest(SharedConfiguringTestBase):
         assert_that(zrequest, verifiably_provides(IBrowserRequest))
         # and it's still a valid pyramid request
         assert_that(zrequest, verifiably_provides(IRequest))
+
+    def test_form_parsing(self):
+        environ = {
+            'PATH_INFO': '/',
+            'QUERY_STRING':
+                'lastName=Doe;country:list=Japan;country:list=Hungary',
+        }
+        request = Request(environ)
+        zrequest = IBrowserRequest(request)
+        assert_that(zrequest.form,
+                    {'country': ['Japan', 'Hungary'], 'lastName': 'Doe'})

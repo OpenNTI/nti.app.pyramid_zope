@@ -71,6 +71,7 @@ setup(
         'z3c.template',
         'zope.authentication',
         'zope.browserpage',
+        'zope.cachedescriptors',
         'zope.component',
         'zope.configuration',
         'zope.dottedname',
