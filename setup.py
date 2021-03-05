@@ -13,6 +13,7 @@ entry_points = {
 }
 
 TESTS_REQUIRE = [
+    'coverage',
     'fudge',
     'nti.testing',
     'zope.testrunner',
@@ -88,10 +89,10 @@ setup(
     extras_require={
         'test': TESTS_REQUIRE,
         'docs':  [
-            'Sphinx >= 2.1.2',
+            'Sphinx',
             'repoze.sphinx.autointerface',
             'sphinx_rtd_theme',
-        ],
+        ] + TESTS_REQUIRE,
     },
     entry_points=entry_points,
 )

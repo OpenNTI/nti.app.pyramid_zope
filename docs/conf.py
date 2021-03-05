@@ -368,6 +368,6 @@ extlinks = {'issue': ('https://github.com/NextThought/nti.app.pyramid_zope/issue
                    'pull request #')}
 
 autodoc_default_options = {
-    'members': True,
+    'members': None,
     'show-inheritance': True,
 }
