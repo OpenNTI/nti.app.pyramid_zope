@@ -62,7 +62,7 @@ setup(
         'PyYAML',
         'nti.property',
         'nti.traversal',
-        'pyramid',
+        'pyramid < 2.0',
         'pyramid-chameleon',
         'setuptools',
         'simplejson',
