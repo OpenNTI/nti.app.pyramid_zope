@@ -35,6 +35,7 @@ jobs:
       run: |
         coverage run -m zope.testrunner --test-path=src  --auto-color --auto-progress
         coverage run -a -m sphinx -b doctest -d docs/_build/doctrees docs docs/_build/doctests
+        coverage report -i
     - name: Submit to Coveralls
       # This is a container action, which only runs on Linux.
       uses: AndreMiras/coveralls-python-action@develop
