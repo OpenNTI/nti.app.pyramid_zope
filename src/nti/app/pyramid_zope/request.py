@@ -10,6 +10,9 @@ Partially based on ideas from :mod:`pyramid_zope_request`
 from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
+from urlparse import urljoin
+from urlparse import urlparse
+from urlparse import urlunparse
 
 from zope import component
 from zope import interface
@@ -25,6 +28,9 @@ from zope.proxy import getProxiedObject
 
 from zope.proxy.decorator import SpecificationDecoratorBase
 
+from zope.publisher.base import RequestDataProperty
+
+from zope.publisher.http import URLGetter
 
 import zope.publisher.interfaces.browser
 
@@ -88,6 +94,16 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
                 base.response.charset = charset
             else:
                 base.response.headers[name] = value
+
+        def redirect(location, status=302, trusted=False):
+            """
+            TODO support for the trusted arg
+            """
+            base.response.status_code=status
+            location = urljoin(base.url, location)
+            base.response.setHeader('Location', location)
+        base.response.redirect = redirect
+            
         base.response.setHeader = setHeader
         base.response.addHeader = setHeader
 
@@ -155,6 +171,9 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
     def keys(self):
         return [k for k, _ in self.items()]
 
+    def has_key(self, k):
+        return k in self
+
     def values(self):
         return [v for _, v in self.items()]
 
@@ -176,8 +195,42 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
     def getHeader(self, name, default=None):
         return self.headers.get(name, default)
 
-    def getURL(self):
-        return self.path_url
+    def _traverse_request_path(self, level, path_only):
+        parsed = list(urlparse(self.path_url))
+        if level:
+            parts = [x for x in parsed[2].split('/') if x]
+            if abs(level) > len(parts):
+                raise IndexError(abs(level))
+            parts = parts[:level]
+            parsed[2] = '/'+'/'.join(parts) if parts else ''
+
+        return parsed[2] if path_only else urlunparse(parsed)
+
+    def getURL(self, level=0, path_only=False):
+        """
+        zope.publisher uses traversed names here
+        instead of working on the url of the request.
+        This implementation works off the request, which
+        will potentially yield different results. What's this gonna break?
+        """
+        if level == 0 and path_only:
+            return self.path_url
+
+        return self._traverse_request_path(-level, path_only)
+
+    def getApplicationURL(self, depth=0, path_only=False):
+        """
+        Like getURL, zope.publisher uses traversed names here
+        instead of working on the url of the request.
+        This implementation works off the request, which
+        will potentially yield different results. What's this gonna break?
+        """
+        if depth == 0 and not path_only:
+            return self.application_url
+        
+        return self._traverse_request_path(depth, path_only)
+
+    URL = RequestDataProperty(URLGetter)
 
     @property
     def locale(self):
@@ -221,13 +274,18 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
     def _unimplemented_prop(self):
         return NotImplemented
 
+    def getVirtualHostRoot(self):
+        return None
+
+    def getPositionalArguments(self):
+        return tuple()
+
     setPathSuffix = _unimplemented
     getTraversalStack = _unimplemented
     setTraversalStack = _unimplemented
     processInputs = _unimplemented
     publication = _unimplemented_prop
     setPublication = _unimplemented
-    getPositionalArguments = _unimplemented
     retry = _unimplemented
     hold = _unimplemented
     setupLocale = _unimplemented
