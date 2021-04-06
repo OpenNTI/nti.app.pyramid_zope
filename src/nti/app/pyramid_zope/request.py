@@ -10,9 +10,9 @@ Partially based on ideas from :mod:`pyramid_zope_request`
 from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
-from urlparse import urljoin
-from urlparse import urlparse
-from urlparse import urlunparse
+from six.moves.urllib_parse import urlparse
+from six.moves.urllib_parse import urlunparse
+from six.moves.urllib_parse import urljoin
 
 from zope import component
 from zope import interface
