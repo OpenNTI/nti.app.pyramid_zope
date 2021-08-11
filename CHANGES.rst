@@ -15,6 +15,9 @@
 
 - Add support for I18N.
 
+- Add support for Python 3.9. 3.10 is expected to work once zodbpickle
+  is released with support for 3.10.
+
 0.0.2 (2020-01-02)
 ==================
 
