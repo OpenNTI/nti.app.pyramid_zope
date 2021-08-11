@@ -27,7 +27,7 @@ def _read(fname):
 
 setup(
     name='nti.app.pyramid_zope',
-    version="0.0.3",
+    version="0.0.4.dev0",
     author='Jason Madden',
     author_email='jason@nextthought.com',
     description="Support for a more Zope-like pyramid.",
