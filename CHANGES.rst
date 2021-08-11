@@ -3,7 +3,7 @@
 =========
 
 
-0.0.3 (unreleased)
+0.0.3 (2021-08-11)
 ==================
 
 - Require ``zope.principalregistry`` and configure it from
