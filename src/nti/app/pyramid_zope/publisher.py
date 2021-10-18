@@ -157,7 +157,6 @@ class ZopeViewCaller(object):
         Some pieces from that have been added, but there are likely still things we aren't doing
         and some places where we could leverage existing zope code.
         """
-        #from IPython.core.debugger import Tracer; Tracer()()
 
         # The first thing we need to do is turn our pyramid request into an
         # IBrowserRequest that zope knows how to deal with. We have an incomplete
@@ -169,82 +168,17 @@ class ZopeViewCaller(object):
         # Now set our default skin on the request.
         setDefaultSkin(request)
 
-        # Now we invoke our zope "view". This isn't necessarily something that returns
-        # a response given a request, it could be, but isn't always. Rather it's an object
-        # were we can begin the zope flow of traversing any remaining path components.
-        # ob = self.view(context, request)
-        
-
-        # # Zope views don't participate in security in quite the same
-        # # way that Pyramid does. Instead, they're wrapped with a
-        # # security proxy if specified in the registration, and then
-        # # they generate a security error at call time.
-        # #
-        # # But it's the publishing machinery that's responsible for
-        # # wrapping context objects in security proxies, and this is
-        # # meant to happen as you traverse: so if you try to traverse to
-        # # something you don't have access to, you never get
-        # # there. Contrast that with Pyramid, which only applies
-        # # security after finding the context object.
-        # # https://github.com/NextThought/nti.dataserver/pull/438#discussion_r597115736
-
-        # # Security wrap the returned object, which is contagious, as
-        # # we go deeper but we bypassed security checks on parent
-        # # objects where zope could have cut us off.
-        # #
-        # # TODO one suggestion is to start at the root and traverse
-        # # using the zope machinary. If we're able to get back to ob
-        # # still we are in good shape.  This would be a generalization of
-        # # the next two loops to essentially replace the publisher
-        # ob = ProxyFactory(ob)
-
-        # # Many zope views are registered with names like `@@` which stop our pyramid traversal
-        # # We may have subpaths that we can use to zope.traverse our object deeper. TODO
-        # # I suspect this loop and the loop after it can possibly generalized given a slightly
-        # # better understanding of IPUblishTraverse and IBrowserPublisher interfaces.
-        # subpath = list(request.subpath)
-        # while subpath:
-        #     ob = IPublishTraverse(ob).publishTraverse(request, subpath.pop())
-
-        # # There are a couple things happening here. zope has the concept of browserDefaults
-        # # which act as a default view for a given object and request. Those browserDefaults
-        # # could be entirely different objects with additional subpaths that need traversed
-        # # Do that here.
-        # while True:
-        #     bp = IBrowserPublisher(ob, None)
-        #     if bp is None:
-        #         break
-        #     ob, path = bp.browserDefault(request)
-        #     # TODO we could proxy here through zope.security.checker.ProxyFactory
-        #     if not path:
-        #         break
-        #     path = list(path)
-        #     while path:
-        #         ob = IPublishTraverse(bp).publishTraverse(request, path.pop())
-
-        # # Ok now we are pretty sure we have a callable that we can invoke and get something
-        # # that resembles a response (or as a side effect sets the response on our request).
-        # # This callable maps most closely to how we think about views on the pyramid side of things.
-        # res = ob
-
-        # # TODO it's not clear to me if we need to make a security checker call explicitly here
-        # # going through IPublishtraverse seems to always return security proxied objects, and
-        # # the adapters registered are also usually security proxied. That said, I think there
-        # # are cases here were res isn't security proxied and we need to either wrap it ourselves
-        # # or check canAccess first. Need to revisit this.
-        # # if not canAccess(res, '__call__'):
-        # #   from IPython.core.debugger import Tracer; Tracer()()
-        # #   raise hexc.HTTPForbidden()
+        # TODO we're traversing again, but this time through the zope
+        # side to both ensure security proxies are in place, and to
+        # traverse the entire way. We traversed at least partway via
+        # pyramid, and we throw that away, but this is a much cleaner
+        # implementation
 
         path = request.path
         assert path[0] == '/'
         path = path[1:]
         
         ztraverser = PublicationTraverser()
-
-        # TODO we're traversing again, but this time through the zope side
-        # to both ensure security proxies are in place, and to traverse the entire
-        # way. We traversed at least partway via pyramid, and we throw that away.
 
         # TODO Pyramid root is our /dataserver2 folder, we need it's parent. the db root(?).
         # Need a better way to get this generally or a level of indirection. In zope
