@@ -32,6 +32,7 @@ from zope.publisher.base import RequestDataProperty
 
 from zope.publisher.http import URLGetter
 
+from zope.publisher.interfaces.http import IResult
 import zope.publisher.interfaces.browser
 
 from zope.security.interfaces import NoInteraction
@@ -111,6 +112,30 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
         base.response.setStatus = lambda status_code: setattr(base.response,
                                                               'status_code',
                                                               status_code)
+
+        def setResult(result):
+            # see https://github.com/zopefoundation/zope.publisher/blob/master/src/zope/publisher/http.py#L805
+            if IResult.providedBy(result):
+                r = result
+            else:
+                r = component.queryMultiAdapter((result, base),
+                                                IResult)
+                if r is None:
+                    if isinstance(result, basestring):
+                        r = result
+                    elif result is None:
+                        r = None
+                    else:
+                        raise TypeError(
+                            'The result should be None, a string, or adaptable to '
+                            'IResult.')
+
+            if isinstance(r, basestring):
+                base.response.text = r
+            elif r is not None:
+                base.response.body = r
+                
+        base.response.setResult = setResult
 
     @Lazy
     def form(self):
