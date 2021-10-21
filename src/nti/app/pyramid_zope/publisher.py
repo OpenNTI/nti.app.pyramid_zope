@@ -183,8 +183,8 @@ class ZopeViewCaller(object):
         # TODO Pyramid root is our /dataserver2 folder, we need it's parent. the db root(?).
         # Need a better way to get this generally or a level of indirection. In zope
         # that level of indirection comes from the publication object's getApplication method
-        app_root = request.root.__parent__ 
-        res = ztraverser.traversePath(request, app_root, path)
+        app_root = request.root.__parent__
+        res = ztraverser.traverseRelativeURL(request, app_root, path)
 
         # # Things aren't as simple as simply calling res. There is black magic in zope.publisher.publish
         # # that invokes the callable based on it's signature potentially supply kwargs from the request
