@@ -26,6 +26,7 @@ from zope.i18n.locales import locales
 from zope.proxy import non_overridable
 from zope.proxy import getProxiedObject
 
+from zope.proxy.decorator import DecoratorSpecificationDescriptor
 from zope.proxy.decorator import SpecificationDecoratorBase
 
 from zope.publisher.base import RequestDataProperty
@@ -43,6 +44,22 @@ from pyramid.interfaces import IRequest
 from pyramid.i18n import get_locale_name
 
 from nti.property.property import alias
+
+
+class _PyramidRequestDemotingSpecificationDescriptor(DecoratorSpecificationDescriptor):
+    """
+    A DecoratorSpecificationDescriptor that ensures the pyramid.interfaces.IRequest
+    has lower precendence than zope's IBrowserRequest.
+    """
+
+    def __get__(self, inst, cls=None):
+        if inst is None:
+            return super(_PyramidRequestDemotingSpecificationDescriptor, self).__get__(inst, cls)
+        result = super(_PyramidRequestDemotingSpecificationDescriptor, self).__get__(inst, cls)
+        result = result - IRequest
+        result = result + IRequest
+        return result
+
 
 # Implement the request
 # and the "skin". In zope, the skin is changeable (IBrowserRequest
@@ -72,6 +89,8 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
             Some additional support for :mod:`z3c.form` comes from
             looking at what :mod:`pyramid_zope_request` does.
     """
+
+    __providedBy__ = _PyramidRequestDemotingSpecificationDescriptor()
 
     def __init__(self, base):
         super(PyramidZopeRequestProxy, self).__init__(base)
