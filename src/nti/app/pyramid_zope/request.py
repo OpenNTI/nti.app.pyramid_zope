@@ -45,6 +45,8 @@ from pyramid.i18n import get_locale_name
 
 from nti.property.property import alias
 
+from nti.base._compat import text_
+
 
 class _PyramidRequestDemotingSpecificationDescriptor(DecoratorSpecificationDescriptor):
     """
@@ -150,7 +152,10 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
                             'IResult.')
 
             if isinstance(r, basestring):
-                base.response.text = r
+                try:
+                    base.response.text = text_(r)
+                except UnicodeDecodeError:
+                    base.response.body = r
             elif r is not None:
                 base.response.body = r
                 
