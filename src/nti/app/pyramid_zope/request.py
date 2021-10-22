@@ -10,6 +10,10 @@ Partially based on ideas from :mod:`pyramid_zope_request`
 from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
+import functools
+
+import six
+
 from six.moves.urllib_parse import urlparse
 from six.moves.urllib_parse import urlunparse
 from six.moves.urllib_parse import urljoin
@@ -45,7 +49,16 @@ from pyramid.i18n import get_locale_name
 
 from nti.property.property import alias
 
-from nti.base._compat import text_
+def text_(s, encoding='utf-8', err='strict'):
+    """
+    Return a string and unicode version of an object. 
+    If the object is an byte sequence it's decoded first
+    :param object s: The object to get an unicode representation of.
+    :param str encoding: The encoding to be used if ``s`` is a byte sequence
+    :param str err: The err handling scheme to be used if ``s`` is a byte sequence
+    """
+    s = s.decode(encoding, err) if isinstance(s, bytes) else s
+    return six.text_type(s) if s is not None else None
 
 
 class _PyramidRequestDemotingSpecificationDescriptor(DecoratorSpecificationDescriptor):
@@ -263,7 +276,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
         will potentially yield different results. What's this gonna break?
         """
         if level == 0 and path_only:
-            return self.path_url
+            return list(urlparse(self.path_url))[2]
 
         return self._traverse_request_path(-level, path_only)
 
