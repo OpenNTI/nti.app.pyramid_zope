@@ -153,7 +153,7 @@ class HTTPResult(object):
         self.msg = getattr(msg, 'msg', msg)
 
     def __iter__(self):
-        return iter(self.msg)
+        return iter([self.msg])
 
 class AdaptableResult(object):
 
@@ -202,6 +202,10 @@ class TestResponse(SharedConfiguringTestBase):
         self.response.setResult(u'this is a unicode mdash —')
         assert_that(self.response.body, is_(b'this is a unicode mdash \xe2\x80\x94'))
 
+    def test_set_result_str(self):
+        self.response.setResult('this is a unicode mdash')
+        assert_that(self.response.body, is_(b'this is a unicode mdash'))
+
     def test_set_result_iresult(self):
         result = HTTPResult(b'this is a unicode mdash \xe2\x80\x94')
         self.response.setResult(result)
@@ -223,13 +227,9 @@ class TestResponse(SharedConfiguringTestBase):
                                  provided=IResult,
                                  required=(AdaptableResult, IBrowserRequest,))
 
-    def test_set_result_bytes(self):
-        self.response.setResult(b'this is a unicode mdash \xe2\x80\x94')
-        assert_that(self.response.body, is_(b'this is a unicode mdash \xe2\x80\x94'))
-
     def test_set_result_none(self):
         self.response.setResult(None)
-        assert_that(self.response.body, is_(''))
+        assert_that(self.response.body, is_(b''))
 
     def test_set_result_raises_on_bad_input(self):
         result = AdaptableResult(b'this is a unicode mdash \xe2\x80\x94')

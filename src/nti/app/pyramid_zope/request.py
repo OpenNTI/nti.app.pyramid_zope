@@ -154,11 +154,12 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
                             'The result should be None, a string, or adaptable to '
                             'IResult.')
 
-            if isinstance(r, six.string_types):
-                try:
-                    base.response.text = unicode(r)
-                except UnicodeDecodeError:
-                    base.response.body = r
+            if isinstance(r, six.text_type):
+                # we have unicode text, just set text
+                base.response.text = r
+            elif isinstance(r, six.string_types):
+                # native string on python 2 (unicode would be caught by first condition)
+                base.response.body = r
             elif r is not None:
                 base.response.app_iter = r
                 
