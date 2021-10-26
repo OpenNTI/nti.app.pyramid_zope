@@ -49,17 +49,6 @@ from pyramid.i18n import get_locale_name
 
 from nti.property.property import alias
 
-def text_(s, encoding='utf-8', err='strict'):
-    """
-    Return a string and unicode version of an object. 
-    If the object is an byte sequence it's decoded first
-    :param object s: The object to get an unicode representation of.
-    :param str encoding: The encoding to be used if ``s`` is a byte sequence
-    :param str err: The err handling scheme to be used if ``s`` is a byte sequence
-    """
-    s = s.decode(encoding, err) if isinstance(s, bytes) else s
-    return six.text_type(s) if s is not None else None
-
 
 class _PyramidRequestDemotingSpecificationDescriptor(DecoratorSpecificationDescriptor):
     """
@@ -148,11 +137,12 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
                                                               status_code)
 
         def setResult(result):
+            # see https://github.com/zopefoundation/zope.publisher/blob/master/src/zope/publisher/interfaces/http.py#L425
             # see https://github.com/zopefoundation/zope.publisher/blob/master/src/zope/publisher/http.py#L805
             if IResult.providedBy(result):
                 r = result
             else:
-                r = component.queryMultiAdapter((result, base),
+                r = component.queryMultiAdapter((result, self),
                                                 IResult)
                 if r is None:
                     if isinstance(result, basestring):
@@ -166,11 +156,11 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
 
             if isinstance(r, basestring):
                 try:
-                    base.response.text = text_(r)
+                    base.response.text = unicode(r)
                 except UnicodeDecodeError:
                     base.response.body = r
             elif r is not None:
-                base.response.body = r
+                base.response.app_iter = r
                 
         base.response.setResult = setResult
 

@@ -17,7 +17,12 @@ from hamcrest import is_
 from hamcrest import less_than
 from hamcrest import raises
 
+from zope import component
+from zope import interface
+
 from zope.interface import providedBy
+
+from zope.publisher.interfaces.http import IResult
 
 from nti.testing.matchers import verifiably_provides
 
@@ -140,6 +145,21 @@ class TestRequest(SharedConfiguringTestBase):
 
         assert_that(zrequest.supportsRetry(), is_(False))
 
+
+@interface.implementer(IResult)
+class HTTPResult(object):
+
+    def __init__(self, msg, req=None):
+        self.msg = getattr(msg, 'msg', msg)
+
+    def __iter__(self):
+        return iter(self.msg)
+
+class AdaptableResult(object):
+
+    def __init__(self, msg):
+        self.msg = msg
+
 class TestResponse(SharedConfiguringTestBase):
 
     set_up_packages = (__name__,)
@@ -177,4 +197,42 @@ class TestResponse(SharedConfiguringTestBase):
         # unicode headers are converted to native strings
         assert_that(key, instance_of(str))
         assert_that(value, instance_of(str))
+
+    def test_set_result_unicode(self):
+        self.response.setResult(u'this is a unicode mdash —')
+        assert_that(self.response.body, is_(b'this is a unicode mdash \xe2\x80\x94'))
+
+    def test_set_result_iresult(self):
+        result = HTTPResult(b'this is a unicode mdash \xe2\x80\x94')
+        self.response.setResult(result)
+        assert_that(self.response.body, is_(b'this is a unicode mdash \xe2\x80\x94'))
+
+    def test_set_result_adapts_iresult(self):
+        sm = component.getGlobalSiteManager()
+        sm.registerAdapter(HTTPResult,
+                           provided=IResult,
+                           required=(AdaptableResult, IBrowserRequest,))
+
+        try:
+        
+            result = AdaptableResult(b'this is a unicode mdash \xe2\x80\x94')
+            self.response.setResult(result)
+            assert_that(self.response.body, is_(b'this is a unicode mdash \xe2\x80\x94'))
+        finally:
+            sm.unregisterAdapter(HTTPResult,
+                                 provided=IResult,
+                                 required=(AdaptableResult, IBrowserRequest,))
+
+    def test_set_result_bytes(self):
+        self.response.setResult(b'this is a unicode mdash \xe2\x80\x94')
+        assert_that(self.response.body, is_(b'this is a unicode mdash \xe2\x80\x94'))
+
+    def test_set_result_none(self):
+        self.response.setResult(None)
+        assert_that(self.response.body, is_(''))
+
+    def test_set_result_raises_on_bad_input(self):
+        result = AdaptableResult(b'this is a unicode mdash \xe2\x80\x94')
+        assert_that(calling(self.response.setResult).with_args(result),
+                    raises(TypeError))
         
