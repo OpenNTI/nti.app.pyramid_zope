@@ -145,7 +145,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
                 r = component.queryMultiAdapter((result, self),
                                                 IResult)
                 if r is None:
-                    if isinstance(result, basestring):
+                    if isinstance(result, six.string_types):
                         r = result
                     elif result is None:
                         r = None
@@ -154,7 +154,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
                             'The result should be None, a string, or adaptable to '
                             'IResult.')
 
-            if isinstance(r, basestring):
+            if isinstance(r, six.string_types):
                 try:
                     base.response.text = unicode(r)
                 except UnicodeDecodeError:
