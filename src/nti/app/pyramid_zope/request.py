@@ -10,6 +10,10 @@ Partially based on ideas from :mod:`pyramid_zope_request`
 from __future__ import print_function, absolute_import, division
 __docformat__ = "restructuredtext en"
 
+import functools
+
+import six
+
 from six.moves.urllib_parse import urlparse
 from six.moves.urllib_parse import urlunparse
 from six.moves.urllib_parse import urljoin
@@ -26,12 +30,14 @@ from zope.i18n.locales import locales
 from zope.proxy import non_overridable
 from zope.proxy import getProxiedObject
 
+from zope.proxy.decorator import DecoratorSpecificationDescriptor
 from zope.proxy.decorator import SpecificationDecoratorBase
 
 from zope.publisher.base import RequestDataProperty
 
 from zope.publisher.http import URLGetter
 
+from zope.publisher.interfaces.http import IResult
 import zope.publisher.interfaces.browser
 
 from zope.security.interfaces import NoInteraction
@@ -42,6 +48,22 @@ from pyramid.interfaces import IRequest
 from pyramid.i18n import get_locale_name
 
 from nti.property.property import alias
+
+
+class _PyramidRequestDemotingSpecificationDescriptor(DecoratorSpecificationDescriptor):
+    """
+    A DecoratorSpecificationDescriptor that ensures the pyramid.interfaces.IRequest
+    has lower precendence than zope's IBrowserRequest.
+    """
+
+    def __get__(self, inst, cls=None):
+        if inst is None:
+            return super(_PyramidRequestDemotingSpecificationDescriptor, self).__get__(inst, cls)
+        result = super(_PyramidRequestDemotingSpecificationDescriptor, self).__get__(inst, cls)
+        result = result - IRequest
+        result = result + IRequest
+        return result
+
 
 # Implement the request
 # and the "skin". In zope, the skin is changeable (IBrowserRequest
@@ -71,6 +93,8 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
             Some additional support for :mod:`z3c.form` comes from
             looking at what :mod:`pyramid_zope_request` does.
     """
+
+    __providedBy__ = _PyramidRequestDemotingSpecificationDescriptor()
 
     def __init__(self, base):
         super(PyramidZopeRequestProxy, self).__init__(base)
@@ -111,6 +135,35 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
         base.response.setStatus = lambda status_code: setattr(base.response,
                                                               'status_code',
                                                               status_code)
+
+        def setResult(result):
+            # see https://github.com/zopefoundation/zope.publisher/blob/master/src/zope/publisher/interfaces/http.py#L425
+            # see https://github.com/zopefoundation/zope.publisher/blob/master/src/zope/publisher/http.py#L805
+            if IResult.providedBy(result):
+                r = result
+            else:
+                r = component.queryMultiAdapter((result, self),
+                                                IResult)
+                if r is None:
+                    if isinstance(result, six.string_types):
+                        r = result
+                    elif result is None:
+                        r = None
+                    else:
+                        raise TypeError(
+                            'The result should be None, a string, or adaptable to '
+                            'IResult.')
+
+            if isinstance(r, six.text_type):
+                # we have unicode text, just set text
+                base.response.text = r
+            elif isinstance(r, six.string_types):
+                # native string on python 2 (unicode would be caught by first condition)
+                base.response.body = r
+            elif r is not None:
+                base.response.app_iter = r
+                
+        base.response.setResult = setResult
 
     @Lazy
     def form(self):
@@ -214,7 +267,7 @@ class PyramidZopeRequestProxy(SpecificationDecoratorBase):
         will potentially yield different results. What's this gonna break?
         """
         if level == 0 and path_only:
-            return self.path_url
+            return list(urlparse(self.path_url))[2]
 
         return self._traverse_request_path(-level, path_only)
 
